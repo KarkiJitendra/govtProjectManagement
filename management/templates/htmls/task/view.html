@@ -1,0 +1,22 @@
+{% extends 'htmls/project/main.html' %}
+{% block content %}
+{% if data %}
+<div>
+    <h2>{{ data.title }}</h2>
+
+    <p><strong>Status:</strong> {{ data.status }}</p> 
+    <p><strong>Linked Project:</strong> {{ data.project}}</p>
+    <p><strong>Assigned-To:</strong> {{ data.assigned_to }}</p>
+    <p><strong>Priority:</strong> {{ data.priority }}</p>
+    <p><strong>Due Date:</strong> {{ data.due_date }}</p>
+    <p><strong>About Task:</strong>{{ data.description }}</p>
+
+
+
+
+</div>
+
+{%else%}
+<p>There is no Project available.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+
+{%extends 'htmls/user/main.html'%}
+{% block content %}
+{% load static %}
+<!-- <img src="{% static 'images/kalahari.jpeg' %}" alt="Background Image  background-size: cover background-position: center;"> -->
+
+    <div class="send-message">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="section-heading">
+                        <h2>{{ message }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="contact-form">
+                        <p>Hello, {{ user }}</p><p> Welcome to the Gaurishankar Project Management Section. You are a {{ user.role }} user.</p>
+                        <h2>You can perform:</h2>
+                        <h3>Features:</h3>
+                        <ul>
+                            {% for feature in features %}
+                                <li>{{ feature }}</li>
+                            {% empty %}
+                                <li>No features available for your role.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

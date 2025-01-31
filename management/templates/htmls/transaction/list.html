@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ project.name }} - Transaction List</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Transactions for Project: {{ project.name }}</h1>
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if transactions %}
+                    {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ transaction.user.username }}</td>
+                            <td>{{ transaction.amount }}</td>
+                            <td>{{ transaction.transaction_type }}</td>
+                            <td>{{ transaction.description }}</td>
+                            <td>{{ transaction.date|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{% url 'edit_transaction' transaction.id %}" class="btn btn-sm btn-primary">Edit</a>
+                                <a href="{% url 'delete_transaction' transaction.id %}" class="btn btn-sm btn-danger">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">No transactions found for this project.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <a href="{% url 'create_transaction' %}" class="btn btn-success mt-3">Add New Transaction</a>
+        <a href="{% url 'ProjectList' %}" class="btn btn-secondary mt-3">Back to Projects</a>
+    </div>
+</body>
+</html>
+
+<script type="text/javascript">
+    window.location.reload();
+</script>
+

@@ -1,0 +1,45 @@
+{% extends 'htmls/project/main.html' %}
+
+{% block content %}
+<header>
+    <h1>My Projects</h1>
+</header>
+{% load static %}
+<h1>Project List</h1>
+
+<!-- Status Filters -->
+<div  class="projects-container">
+    <a href="?status=all" class="filter {% if status_filter == 'all' %}active{% endif %}">All</a>
+    <a href="?status=Planning" class="filter {% if status_filter == 'Planning' %}active{% endif %}">Planning</a>
+    <a href="?status=Ongoing" class="filter {% if status_filter == 'Ongoing' %}active{% endif %}">Ongoing</a>
+    <a href="?status=Completed" class="filter {% if status_filter == 'Completed' %}active{% endif %}">Completed</a>
+</div>
+
+<!-- Project List -->
+<div class="projects-container">
+    {% if data %}
+      {% for project in data %}
+
+        <div class="project-card">
+            <a href="{%url 'Project-View' project.id %}" >
+        <!-- <a href="{{ project.id }}/" class="content-link"> -->
+          <div class="project-card-img">
+            {% if project.image %}
+              <img src="{{ project.image.url }}" alt="{{ project.title }}">
+            {% else %}
+              <p>No Image</p> 
+            {% endif %}
+          </div>
+          <h3>{{ project.title }}</h3>
+          <p><strong>Status:</strong> {{ project.status }}</p>
+          <p><strong>Price:</strong> ${{ project.budget }}</p>
+          </a>
+          <a href="{% url 'Project-Edit' project.id %}" class="edit-link">Edit</a> | <a href="{% url 'Project-Delete' project.id %}" class="delete-link">Delete</a>
+
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No projects available for this status.</p>
+    {% endif %}
+  </div>
+{% endblock content %}

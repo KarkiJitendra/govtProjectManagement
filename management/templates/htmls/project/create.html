@@ -1,0 +1,9 @@
+{% extends 'htmls/project/main.html' %}
+{% block content %}
+<h1>Create New Project</h1>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p}}
+    <input type="submit" value="Submit">
+</form>
+{% endblock %}

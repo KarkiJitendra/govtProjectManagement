@@ -1,0 +1,38 @@
+{% extends 'htmls/project/main.html' %}
+
+{% block content %}
+<header>
+    <h1>Our Tasks</h1>
+</header>
+{% load static %}
+<h1>Project List</h1>
+
+<!-- Status Filters -->
+<div  class="projects-container">
+    <a href="?status=all" class="filter {% if status_filter == 'all' %}active{% endif %}">All</a>
+    <a href="?status=Pending" class="filter {% if status_filter == 'Pending' %}active{% endif %}">Pending</a>
+    <a href="?status=In Progress" class="filter {% if status_filter == 'In Progress' %}active{% endif %}">In Progress</a>
+    <a href="?status=Completed" class="filter {% if status_filter == 'Completed' %}active{% endif %}">Completed</a>
+</div>
+
+<!-- Project List -->
+<div class="projects-container">
+    {% if data %}
+      {% for task in data %}
+
+        <div class="project-card">
+            <a href="{%url 'TaskView' task.id %}" >
+        <!-- <a href="{{ project.id }}/" class="content-link"> -->
+          <h3>{{ task.title }}</h3>
+          <p><strong>Status:</strong> {{ task.status }}</p>
+        </a>
+        <a href="{% url 'Task-Edit' task.id %}" class="edit-link">Edit</a> | <a href="{% url 'Task-Delete' task.id %}" class="delete-link">Delete</a>
+        </div>
+
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No projects available for this status.</p>
+    {% endif %}
+  </div>
+{% endblock content %}

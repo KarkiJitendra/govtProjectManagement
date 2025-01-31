@@ -1,0 +1,31 @@
+{% extends 'htmls/project/main.html' %}
+{% block content %}
+{% if data %}
+<div>
+    <h2>{{ data.title }}</h2>
+
+    <p><strong>Status:</strong> {{ data.status }}</p> 
+    <p><strong>Start Date:</strong> {{ data.start_date }}</p>
+    <p><strong>End Date:</strong> {{ data.end_date }}</p>
+    <p><strong>Owner:</strong> {{ data.owner }}</p>
+    <p><strong>Budget:</strong> ${{ data.budget }}</p>
+  
+    <h3>Team Members:</h3>
+    <ul>
+      {% for member in data.team_members.all %}
+        <li>{{ member.username }}</li> 
+      {% endfor %}
+    </ul>
+<form action="{% url 'View-Task' data.id %}" method="get">
+    <button type="submit">View All Tasks</button>
+</form>
+<form action="{% url 'transaction_list' data.id %}" method="get">
+    <button type="submit">View Transactions</button>
+</form>
+
+</div>
+
+{%else%}
+<p>There is no Project available.</p>
+{% endif %}
+{% endblock %}
