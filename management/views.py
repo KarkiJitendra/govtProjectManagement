@@ -5,9 +5,11 @@ from django.template.context_processors import request
 from django.db import transaction
 
 from .models import Project, Task, Transaction
-from .forms import ProjectForm, TaskForm, TransactionForm
+from .forms import ProjectForm, TaskForm, TransactionForm, FeedbackForm
 from django.contrib.auth import authenticate, login
 from .utils import get_features
+from django.core.mail import send_mail
+from django.conf import settings
 
 #################--userVIews---############
 
@@ -237,7 +239,7 @@ def edittransaction(request, id):
             form = TransactionForm(request.POST, instance=transaction_obj)
             if form.is_valid():
                 form.save()
-                return redirect('list_transaction')
+                return redirect('transaction_list', project_id=form.cleaned_data['project'].id)
             
         else:
             form = TransactionForm(instance=transaction_obj)
@@ -274,12 +276,36 @@ def deletetransaction(request,id):
 #################--FeedbackViews---############
 
 
+def submit_feedback(request):
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            if request.user.is_authenticated:
+                feedback.user = request.user
+            feedback.save()
 
+            # Send email notification
+            subject = f"New Feedback on {feedback.get_feedback_type_display()}"
+            message = (
+                f"Feedback Details:\n\n"
+                f"User: {feedback.user or 'Anonymous'}\n"
+                f"Type: {feedback.get_feedback_type_display()}\n"
+                f"Project: {feedback.project.title if feedback.project else 'N/A'}\n"
+                f"Task: {feedback.task.title if feedback.task else 'N/A'}\n"
+                f"Rating: {feedback.get_rating_display() if feedback.rating else 'N/A'}\n"
+                f"Feedback: {feedback.feedback_text}\n"
+                f"Date: {feedback.date_submitted}"
+            )
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[settings.EMAIL_HOST_USER],  # Send to your email
+                fail_silently=False,
+            )
 
-
-
-
-
-
-
-
+            return render(request, 'htmls/feedback/thanku.html')  # Redirect to a thank-you page
+    else:
+        form = FeedbackForm()
+    return render(request, 'htmls/feedback/contact.html', {'form': form})

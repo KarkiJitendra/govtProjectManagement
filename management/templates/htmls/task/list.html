@@ -1,38 +1,49 @@
 {% extends 'htmls/project/main.html' %}
-
-{% block content %}
-<header>
-    <h1>Our Tasks</h1>
-</header>
 {% load static %}
-<h1>Project List</h1>
+{% block content %}
 
-<!-- Status Filters -->
-<div  class="projects-container">
-    <a href="?status=all" class="filter {% if status_filter == 'all' %}active{% endif %}">All</a>
-    <a href="?status=Pending" class="filter {% if status_filter == 'Pending' %}active{% endif %}">Pending</a>
-    <a href="?status=In Progress" class="filter {% if status_filter == 'In Progress' %}active{% endif %}">In Progress</a>
-    <a href="?status=Completed" class="filter {% if status_filter == 'Completed' %}active{% endif %}">Completed</a>
+<div class="max-w-5xl mx-auto py-10">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold text-blue-700 mb-4">Our Tasks</h1>
+    </header>
+
+    <div class="flex flex-wrap gap-3 mb-6">
+        <a href="?status=all" class="px-4 py-2 rounded-full text-sm font-medium border 
+            {% if status_filter == 'all' %}bg-blue-600 text-white{% else %}border-gray-300 text-gray-700 hover:bg-gray-100{% endif %}">
+            All
+        </a>
+        <a href="?status=Pending" class="px-4 py-2 rounded-full text-sm font-medium border 
+            {% if status_filter == 'Pending' %}bg-yellow-500 text-white{% else %}border-gray-300 text-gray-700 hover:bg-gray-100{% endif %}">
+            Pending
+        </a>
+        <a href="?status=In Progress" class="px-4 py-2 rounded-full text-sm font-medium border 
+            {% if status_filter == 'In Progress' %}bg-indigo-500 text-white{% else %}border-gray-300 text-gray-700 hover:bg-gray-100{% endif %}">
+            In Progress
+        </a>
+        <a href="?status=Completed" class="px-4 py-2 rounded-full text-sm font-medium border 
+            {% if status_filter == 'Completed' %}bg-green-600 text-white{% else %}border-gray-300 text-gray-700 hover:bg-gray-100{% endif %}">
+            Completed
+        </a>
+    </div>
+
+    {% if data %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for task in data %}
+                <div class="bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg transition">
+                    <a href="{% url 'TaskView' task.id %}" class="block mb-2">
+                        <h3 class="text-xl font-semibold text-blue-700">{{ task.title }}</h3>
+                        <p class="text-sm text-gray-600 mt-1"><strong>Status:</strong> {{ task.status }}</p>
+                    </a>
+                    <div class="flex justify-between items-center mt-4 text-sm">
+                        <a href="{% url 'Task-Edit' task.id %}" class="text-indigo-600 hover:underline">Edit</a>
+                        <a href="{% url 'Task-Delete' task.id %}" class="text-red-600 hover:underline">Delete</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-gray-500 mt-4">No projects available for this status.</p>
+    {% endif %}
 </div>
 
-<!-- Project List -->
-<div class="projects-container">
-    {% if data %}
-      {% for task in data %}
-
-        <div class="project-card">
-            <a href="{%url 'TaskView' task.id %}" >
-        <!-- <a href="{{ project.id }}/" class="content-link"> -->
-          <h3>{{ task.title }}</h3>
-          <p><strong>Status:</strong> {{ task.status }}</p>
-        </a>
-        <a href="{% url 'Task-Edit' task.id %}" class="edit-link">Edit</a> | <a href="{% url 'Task-Delete' task.id %}" class="delete-link">Delete</a>
-        </div>
-
-        </div>
-      {% endfor %}
-    {% else %}
-      <p>No projects available for this status.</p>
-    {% endif %}
-  </div>
 {% endblock content %}

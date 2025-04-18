@@ -1,14 +1,21 @@
 {% extends 'htmls/project/main.html' %}
 {% block content %}
-<h1>Edit The Task</h1>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% if form %}
-        {{ form.as_p }}
-    {% else %}
-        <p>No form available</p>
-    {% endif %}
-    <input type="submit" value="Save Changes">
-</form>
+
+<div class="max-w-3xl mx-auto mt-10 bg-white shadow-md rounded-lg p-8">
+    <h1 class="text-2xl font-bold text-blue-700 mb-6">Edit Task</h1>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        {% if form %}
+            {{ form.as_p }}
+        {% else %}
+            <p class="text-red-500">No form available.</p>
+        {% endif %}
+
+        <input type="submit" value="Save Changes"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded cursor-pointer" />
+    </form>
+</div>
 
 {% endblock %}

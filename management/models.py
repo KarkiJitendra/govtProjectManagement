@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-
+from django.core.mail import send_mail
+from django.conf import settings
 
 class CustomUser(AbstractUser):
         ROLE_CHOICES = [
@@ -74,9 +75,55 @@ class Transaction(models.Model):
         super().save(*args, **kwargs)
 
 
+
+
 class Feedback(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    FEEDBACK_TYPE_CHOICES = [
+        ('project', 'Project'),
+        ('task', 'Task'),
+        ('webpage', 'Webpage'),
+    ]
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
+    feedback_type = models.CharField(max_length=10, choices=FEEDBACK_TYPE_CHOICES, default='webpage')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, null=True, blank=True)
     feedback_text = models.TextField()
-    rating = models.IntegerField(choices=[(1, 'Poor'), (2, 'Fair'), (3, 'Good'), (4, 'Very Good'), (5, 'Excellent')])
+    rating = models.IntegerField(choices=[(1, 'Poor'), (2, 'Fair'), (3, 'Good'), (4, 'Very Good'), (5, 'Excellent')], null=True, blank=True)
     date_submitted = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Ensure feedback is linked to the correct type
+        if self.feedback_type == 'project' and not self.project:
+            raise ValidationError("Project feedback must be linked to a project.")
+        if self.feedback_type == 'task' and not self.task:
+            raise ValidationError("Task feedback must be linked to a task.")
+        if self.feedback_type == 'webpage' and (self.project or self.task):
+            raise ValidationError("Webpage feedback cannot be linked to a project or task.")
+        
+        
+        # Run validation before saving
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+        # Send email notification
+        subject = f"New Feedback Submitted by {self.user.username}"
+        message = (
+                f"Feedback Details:\n\n"
+                f"User: {self.user.username}\n"
+                f"Project: {self.project.title if self.project else 'N/A'}\n"
+                f"Task: {self.task.title if self.task else 'N/A'}\n"
+                f"Rating: {self.get_rating_display()}\n"
+                f"Feedback: {self.feedback_text}\n"
+                f"Date: {self.date_submitted}"
+            )
+        send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=['your@gmail.com'],  # Your Gmail address
+                fail_silently=False,
+            )
+
+    def __str__(self):
+        return f"Feedback on {self.get_feedback_type_display()} by {self.user or 'Anonymous'}"

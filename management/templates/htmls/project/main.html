@@ -5,53 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     {% load static %}
-    <!-- <link rel="stylesheet" {% static 'css/main.css'%} -->
-    <link rel="stylesheet" href="{% static 'css/project.css' %}">
-    <link rel="stylesheet" href="{% static 'css/prolist.css' %}">
-
+    <script src="https://cdn.tailwindcss.com"></script> <!-- Tailwind CDN -->
 </head>
-<body>
-<body>
+<body class="flex flex-col min-h-screen font-sans bg-gray-100 text-gray-800">
+
     <!-- Header -->
-    <header>
-        <div class="navbar">
-            <div class="navbar-brand">
-                <h2>Gaurishankar-2 <em>Projects</em></h2>
+    <header class="bg-gray-800 text-white py-4">
+        <div class="flex justify-between items-center max-w-6xl mx-auto px-4">
+            <div class="text-2xl font-bold">
+                Gaurishankar-2 <em>Projects</em>
             </div>
-            <ul class="navbar-nav">
-                <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Projects</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">About</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+            <ul class="flex space-x-4">
+                <li><a href="#" class="px-4 py-2 rounded hover:bg-gray-700">Home</a></li>
+                <li><a href="#" class="px-4 py-2 rounded hover:bg-gray-700">Projects</a></li>
+                <li><a href="#" class="px-4 py-2 rounded hover:bg-gray-700">About</a></li>
+                <li><a href="#" class="px-4 py-2 rounded hover:bg-gray-700">Contact</a></li>
             </ul>
         </div>
     </header>
 
-    <main>
+    <!-- Main Content -->
+    <main class="flex-grow bg-blue-50 py-10 px-4">
         {% block content %}
-        <h1>Project Dashboard</h1>
-        <div class="row">
+        <h1 class="text-3xl text-center font-semibold mb-10">Project Dashboard</h1>
+
+        <div class="flex flex-wrap justify-center gap-6">
             <!-- Project Card -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Project Name</h5>
-                        <p class="card-text"><strong>Owner:</strong> Owner Name</p>
-                        <p class="card-text"><strong>Status:</strong> In Progress</p>
-                        <p class="card-text"><strong>Description:</strong> A brief project description goes here.</p>
+            <div class="w-full sm:w-1/2 md:w-1/3 max-w-sm">
+                <div class="bg-white border border-gray-200 rounded-lg shadow flex flex-col h-full">
+                    <div class="p-4 flex-grow">
+                        <h5 class="text-xl font-semibold mb-2">Project Name</h5>
+                        <p class="text-sm mb-1"><strong>Owner:</strong> Owner Name</p>
+                        <p class="text-sm mb-1"><strong>Status:</strong> In Progress</p>
+                        <p class="text-sm"><strong>Description:</strong> A brief project description goes here.</p>
                     </div>
-                    <div class="card-footer">
-                        <button onclick="viewDetails()">View Details</button>
+                    <div class="bg-gray-100 p-4 text-center">
+                        <button onclick="viewDetails()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-800 transition">View Details</button>
                     </div>
                 </div>
             </div>
-            <!-- Additional cards can go here -->
+            <!-- Additional cards can be added here -->
         </div>
+        {% endblock %}
     </main>
 
-    {% endblock %}
-    <footer>
-        <p>&copy; 2025 Project Dashboard. All Rights Reserved.</p>
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-4">
+        &copy; 2025 Project Dashboard. All Rights Reserved.
     </footer>
 
     <script>

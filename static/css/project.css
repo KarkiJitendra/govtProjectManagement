@@ -50,10 +50,10 @@
 
         /* Main Content */
         main {
-            flex: 1; /* Allow the main content to grow and push the footer down */
+           
             background-color: azure;
             padding: 2rem;
-            max-width: 1200px;
+            width: 1200px;
             margin: 0 auto;
             box-sizing: border-box;
         }
