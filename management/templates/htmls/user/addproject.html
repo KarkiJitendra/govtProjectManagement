@@ -1,0 +1,69 @@
+{% extends 'htmls/project/main.html' %}
+{% block content %}
+{% load static %}
+
+<div class="min-h-md-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-xl">
+    <div>
+      <h2 class="text-center text-3xl font-extrabold text-blue-800">Add Project User</h2>
+      <p class="mt-2 text-center text-sm text-gray-600">Enter the user details below</p>
+    </div>
+    
+    <form method="POST" class="mt-8 space-y-6">
+      {% csrf_token %}
+      <div class="rounded-md shadow-sm space-y-4">
+        
+        <!-- Name Field -->
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+          <input id="name" name="name" type="text" required
+                 class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                 placeholder="John Doe">
+        </div>
+        
+        <!-- Email Field -->
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+          <input id="email" name="email" type="email" required
+                 class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                 placeholder="you@example.com">
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input id="password" name="password" type="password" required
+                 class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                 placeholder="********">
+        </div>
+        <div>
+          <label for="password2" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+          <input id="password2" name="confirm password" type="password" required
+                 class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                 placeholder="********">
+        </div>
+
+      </div>
+
+      <div>
+        <button type="submit"
+                class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          Add User
+        </button>
+      </div>
+      {% if form.errors %}
+    <div class="alert alert-danger">
+        <ul>
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+    </form>
+  </div>
+</div>
+
+{% endblock %}

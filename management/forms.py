@@ -1,6 +1,8 @@
 from .models import Project
 from django import forms
 from .models import CustomUser, Task, Transaction, Feedback
+from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import ValidationError
 
 class TaskForm(forms.ModelForm):
     class Meta:
@@ -76,8 +78,34 @@ class Signin(forms.ModelForm):
         if password1 != password2:
             raise forms.ValidationError("Passwords do not match")
         return password2
+    
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if CustomUser.objects.filter(email=email).exists():
+            raise ValidationError("This email address is already in use. Please supply a different email address.")
+        return email
 
 
+class Signin_User(UserCreationForm):
+    email = forms.EmailField(required=True, help_text="Required. Inform a valid email address.")
+
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'password1', 'password2']
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if CustomUser.objects.filter(email=email).exists():
+            raise ValidationError("This email address is already in use. Please supply a different email address.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user
 #################--userVIews---############
 from django import forms
 from .models import Transaction

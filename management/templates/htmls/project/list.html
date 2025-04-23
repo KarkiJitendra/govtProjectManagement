@@ -3,7 +3,7 @@
 {% block content %}
 {% load static %}
 
-<header class="text-center my-6">
+<header class="text-center my-3">
   <h1 class="text-3xl font-bold text-gray-800">My Projects</h1>
 </header>
 
@@ -16,6 +16,8 @@
     <a href="?status=Planning" class="px-4 py-2 rounded-full border {% if status_filter == 'Planning' %}bg-green-500 text-white{% else %}bg-white text-green-500 border-green-500{% endif %} hover:bg-green-100">Planning</a>
     <a href="?status=Ongoing" class="px-4 py-2 rounded-full border {% if status_filter == 'Ongoing' %}bg-yellow-500 text-white{% else %}bg-white text-yellow-500 border-yellow-500{% endif %} hover:bg-yellow-100">Ongoing</a>
     <a href="?status=Completed" class="px-4 py-2 rounded-full border {% if status_filter == 'Completed' %}bg-purple-500 text-white{% else %}bg-white text-purple-500 border-purple-500{% endif %} hover:bg-purple-100">Completed</a>
+    <button class="px-4 py-2 rounded-full border bg-orange-500 bg-white text-orange-500 border-orange-500 hover:bg-orange-100" onclick="window.location.href='{% url 'create_project' %}'">Create New Project</button>
+  
   </div>
 
   <!-- Project List -->
@@ -35,11 +37,13 @@
             <p class="text-sm text-gray-600 text-center mt-1"><strong>Status:</strong> {{ project.status }}</p>
             <p class="text-sm text-gray-600 text-center"><strong>Price:</strong> ${{ project.budget }}</p>
           </a>
+          {% if user.role == Government %}
           <div class="mt-4 text-center">
             <a href="{% url 'Project-Edit' project.id %}" class="text-red-500 font-semibold hover:underline">Edit</a>
             <span class="mx-2 text-gray-400">|</span>
             <a href="{% url 'Project-Delete' project.id %}" class="text-red-500 font-semibold hover:underline">Delete</a>
           </div>
+        {% endif %}
         </div>
       {% endfor %}
     {% else %}

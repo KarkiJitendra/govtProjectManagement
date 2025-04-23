@@ -1,13 +1,14 @@
 from django.urls import path
 from .views import login_view, signin_view, dashboard_view, createproject, projectlist, projectedit, projectdelete, \
     projectview, create_task, tasklist, taskview, taskedit, taskdelete, viewtask, transaction_list, createtransaction,\
-    edittransaction, deletetransaction, listtransaction, submit_feedback
+    edittransaction, deletetransaction, listtransaction, submit_feedback, add_company
 
 urlpatterns = [
     path('login/', login_view, name='login'),
     path('', signin_view, name='signup'),
     path('dashboard/', dashboard_view, name='dashboard'),
-
+    path('logout/', login_view, name='logout'),
+    path('projectuser/',add_company, name='add_company'), 
     #project urls
     path('project/', createproject, name='create_project'),
     path('project/list/', projectlist, name='ProjectList'),

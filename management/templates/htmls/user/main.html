@@ -1,191 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    {% load static %}
-    <style>
-        /* General Styles */
-        body {
-            background-image: url"{% static 'images/dadaa.webp' %}";
-            background-color: antiquewhite;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-            color: #212529;
-        }
+{% extends "htmls/project/main.html" %}
+{% block content %}
 
-        /* Navbar */
-        header {
-            background-color: #343a40;
-            color: white;
-            padding: 1rem 0;
-        }
-        header .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-        header .navbar-brand h2 {
-            margin: 0;
-            color: #fff;
-        }
-        header .navbar-nav {
-            display: flex;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        header .navbar-nav .nav-item {
-            margin: 0 0.5rem;
-        }
-        header .navbar-nav .nav-link {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-        }
-        header .navbar-nav .nav-link:hover {
-            background-color: #495057;
-            border-radius: 5px;
-        }
-
-        /* Main Content */
-        main {
-            /* background-image: url("{% static 'images/kalahari.jpeg' %}");
-            background-size: ;
-            background-position: center; */
-            background-color: azure;
-            padding: 2rem;
-            width: 1200px;
-            margin: 0 auto;
-            display: none;
-        }
-        main h1 {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .col-md-4 {
-            text-align: center;
-            flex: 1 1 calc(33.333% - 1rem);
-            max-width: calc(33.333% - 1rem);
-            box-sizing: border-box;
-        }
-
-
-        /* Card Styles */
-        .card {
-            background-color: white;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-        }
-        .card-body {
-            padding: 1rem;
-        }
-        .card-title {
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
-        }
-        .card-text {
-            margin: 0.5rem 0;
-        }
-        .card-footer {
-            padding: 1rem;
-            text-align: center;
-            background-color: #f8f9fa;
-        }
-        .card-footer button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-        }
-        .card-footer button:hover {
-            background-color: #0056b3;
-        }
-
-        /* Footer */
-        footer {
-            position:sticky;
-            background-color: #343a40;
-            color: white;
-            text-align: center;
-            padding: 1rem;
-            margin-top: 2rem;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .col-md-4 {
-                flex: 1 1 calc(50% - 1rem);
-                max-width: calc(50% - 1rem);
-            }
-        }
-        @media (max-width: 576px) {
-            .col-md-4 {
-                flex: 1 1 100%;
-                max-width: 100%;
-            }
-        }
-</style>
-</head>
-<body>
-    <!-- Header -->
-    <header>
-        <div class="navbar">
-            <div class="navbar-brand">
-                <h2>Gaurishankar-2 <em>Projects</em></h2>
-            </div>
-            <ul class="navbar-nav">
-                <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Projects</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">About</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
-            </ul>
-        </div>
-    </header>
-
-    <main>
-        {% block content %}
-        <h1>Project Dashboard</h1>
-        <div class="row">
+    <!-- Main Content -->
+    <main class="flex-grow bg-white/90 max-w-7xl mx-auto my-10 p-6 rounded-lg shadow-lg">
+    
+        <h1 class="text-3xl font-bold text-center mb-8">Project Dashboard</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             <!-- Project Card -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Project Name</h5>
-                        <p class="card-text"><strong>Owner:</strong> Owner Name</p>
-                        <p class="card-text"><strong>Status:</strong> In Progress</p>
-                        <p class="card-text"><strong>Description:</strong> A brief project description goes here.</p>
-                    </div>
-                    <div class="card-footer">
-                        <button onclick="viewDetails()">View Details</button>
-                    </div>
+            <div class="bg-white border border-gray-200 rounded-lg shadow-md flex flex-col justify-between">
+                <div class="p-4">
+                    <h5 class="text-xl font-semibold mb-2">Project Name</h5>
+                    <p class="text-gray-700"><strong>Owner:</strong> Owner Name</p>
+                    <p class="text-gray-700"><strong>Status:</strong> In Progress</p>
+                    <p class="text-gray-700"><strong>Description:</strong> A brief project description goes here.</p>
+                </div>
+                <div class="p-4 bg-gray-100 text-center">
+                    <button onclick="viewDetails()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">View Details</button>
                 </div>
             </div>
-            <!-- Additional cards can go here -->
+            <!-- Add more cards as needed -->
         </div>
     </main>
 
-    {% endblock %}
-    <footer>
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-4">
         <p>&copy; 2025 Project Dashboard. All Rights Reserved.</p>
     </footer>
 
@@ -195,4 +33,5 @@
         }
     </script>
 </body>
-</html>
+
+{% endblock %}

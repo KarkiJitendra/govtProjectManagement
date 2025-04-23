@@ -1,144 +1,65 @@
+{% load widget_tweaks %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up Page</title>
-    <style>
-        .error-message {
-    color: #ff0000; /* Bright red color for error visibility */
-    font-size: 14px;
-    margin-top: 10px; /* Space between the form and the error */
-    border: 1px solid #ff0000; /* Border to highlight the error */
-    background-color: #ffe6e6; /* Light red background for better visibility */
-    padding: 10px; /* Padding for better spacing inside the box */
-    border-radius: 4px; /* Rounded corners for the error box */
-}
-
-/* Ensure error is visually distinct */
-.error-message {
-    color: #ff0000; /* Bright red color for error visibility */
-    font-size: 14px;
-    margin-top: 10px; /* Space between the form and the error */
-    border: 1px solid #ff0000; /* Border to highlight the error */
-    background-color: #ffe6e6; /* Light red background for better visibility */
-    padding: 10px; /* Padding for better spacing inside the box */
-    border-radius: 4px; /* Rounded corners for the error box */
-}
-
-/* Ensure error is visually distinct */
-.error-message p {
-    margin: 0; /* Remove extra margin in paragraphs */
-    font-weight: bold; /* Make text bold */
-}
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .signup-container {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 20px 30px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
-
-        .signup-container h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #000;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #555;
-        }
-
-        .form-group select {
-            background-color: #f9f9f9;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 10px;
-            background-color: #333;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .submit-btn:hover {
-            background-color: #555;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-<div class="signup-container">
-    <h2>Sign Up</h2>
-    <form method="post" >
-        {% csrf_token%}
-        <div class="form-group" >
-            <label for="name">Name</label>
-            {{ form.username }}
+<div class="bg-white shadow-md rounded-lg p-8 w-full max-w-md">
+    <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Sign Up</h2>
+
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        
+        <div>
+            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            {{ form.username|add_class:"w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" }}
         </div>
-        <div class="form-group">
-            <label for="email">Email</label>
-            {{ form.email }}
+
+        <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            {{ form.email|add_class:"w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" }}
         </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            {{ form.password1 }}
+
+        <div>
+            <label for="password1" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            {{ form.password1|add_class:"w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" }}
         </div>
-        <div class="form-group">
-            <label for="confirm-password">Confirm Password</label>
-            {{ form.password2 }}
-                </div>
-        <div class="form-group">
-            <label for="role">Role</label>
-            {{ form.role }}
+
+        <div>
+            <label for="password2" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+            {{ form.password2|add_class:"w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" }}
         </div>
-        <button type="submit" class="submit-btn">Sign Up</button>
+
+        <div>
+            <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            {{ form.role|add_class:"w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+
+        <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition duration-200">
+            Sign Up
+        </button>
     </form>
-    <a href="{% url 'login' %}" >Already Have An Account</a>
-    {% if form.errors %}
-    <p>Error in the Signup Process</p>
-    <div class="errors">
-        {% for error in form.errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
+
+    <div class="text-center mt-4">
+        <a href="{% url 'login' %}" class="text-sm text-blue-600 hover:underline">Already have an account?</a>
     </div>
-{% endif %}
+
+    {% if form.errors %}
+        <div class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            <strong class="font-bold">Error:</strong>
+            <ul class="mt-2 list-disc list-inside text-sm">
+                {% for error in form.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
 
 </div>
 

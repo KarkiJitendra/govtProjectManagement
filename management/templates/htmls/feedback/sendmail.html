@@ -16,11 +16,14 @@
         document.getElementById("id_feedback_type").addEventListener("change", toggleFields);
     });
 </script>
+<div class="min-h-md
 
-<div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+
+flex items-center justify-center  px-4">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
         <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">Submit Feedback</h1>
-        <form method="post" class="space-y-4">
+        <form action="https://api.web3forms.com/submit" method="post" class="space-y-4">
+            <input type="hidden" name="access_key" value="750e9878-1bc6-4ba0-b464-d6816156352b">
             {% csrf_token %}
 
             <!-- Feedback Type -->

@@ -5,12 +5,15 @@ from django.template.context_processors import request
 from django.db import transaction
 
 from .models import Project, Task, Transaction
-from .forms import ProjectForm, TaskForm, TransactionForm, FeedbackForm
-from django.contrib.auth import authenticate, login
+from .forms import ProjectForm, TaskForm, TransactionForm, FeedbackForm, Signin_User
+from django.contrib.auth import authenticate, login, logout
 from .utils import get_features
 from django.core.mail import send_mail
 from django.conf import settings
-
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth.hashers import make_password
 #################--userVIews---############
 
 from .forms import Signin
@@ -24,9 +27,16 @@ def signin_view(request):
     if request.method == 'POST':
         form = Signin(request.POST)
         if form.is_valid():
-            # Save the user
+            role = form.cleaned_data['role']
+
+            # Prevent signup for role 'Company'
+            if role == 'Company':
+                # You can add a message if you use messages framework
+                messages.warning(request, "Company users cannot sign up directly. Please contact an admin.")
+                return redirect('login')
+
             user = form.save(commit=False)
-            user.role = form.cleaned_data['role']
+            user.role = role
             user.set_password(form.cleaned_data['password1'])  # Hash the password
             user.save()
 
@@ -35,14 +45,17 @@ def signin_view(request):
             user = authenticate(request, username=user.username, password=raw_password)
             if user is not None:
                 login(request, user)
-                return redirect('dashboard')  # Use redirect instead of render
+                return redirect('dashboard')
 
         else:
             print(form.errors)  # Debug: Check validation errors
-            return render(request, 'htmls/user/signup.html', {'form': form})
+
     else:
         form = Signin()
+
     return render(request, 'htmls/user/signup.html', {'form': form})
+
+
 
 
 def login_view(request):
@@ -68,6 +81,11 @@ def login_view(request):
     # Render login form for GET request
     return render(request, 'htmls/user/login.html')
 
+def logout_view(request):
+    # Handle user logout
+    logout(request)
+    return redirect('login')  # Redirect to login page after logout
+
 
 def dashboard_view(request):
     user = request.user
@@ -78,6 +96,44 @@ def dashboard_view(request):
 
     return render(request, "htmls/user/dashboard.html", context)
 
+
+
+
+def add_company(request):
+    if request.method == 'POST':
+        form = Signin(request.POST)
+        if form.is_valid():
+            # Create a new user instance but avoid saving it yet
+            user = form.save(commit=False)
+            # Set the password
+            user.password = make_password(form.cleaned_data['password1'])
+            # Save the user to the database
+            user.save()
+            messages.success(request, "User added successfully!")
+            return redirect('dashboard')  # Redirect to a success page or dashboard
+        else:
+            messages.error(request, "Error adding user. Please check the form.")
+    else:
+        form = Signin()
+    return render(request, 'htmls/user/adproject.html', {'form': form})
+    
+
+# def add_company(request):
+#     if request.method == 'POST':
+#         form = Signin_User(request.POST)
+#         if form.is_valid():
+#             user = form.save(commit=False)
+#             user.role = 'Company'
+#             user.set_password(form.cleaned_data['password1'])
+#             user.save()
+#             messages.success(request, "Company added successfully!")
+#             return redirect('dashboard')  # Redirect to a success page or dashboard
+#         else:
+#             messages.error(request, "Error adding company. Please check the form.")
+#             print(form.errors)  # Print form errors to the console
+#     else:
+#         form = Signin_User()
+#     return render(request, 'htmls/user/addproject.html', {'form': form})
 
 #################--ProjectVIews---############
 def createproject(request):
@@ -175,8 +231,13 @@ def tasklist(request):
         data = Task.objects.all()
 
     else:
-        data = Task.objects.get(status=status_filter)
-
+        data = Task.objects.filter(status=status_filter)
+    # status_filter = request.GET.get('status', 'all')  # Get the category from the request
+    # if status_filter:
+    #     tasks = Task.objects.filter(status=status_filter)  
+    # else:
+    #     tasks = Task.objects.all()
+        
     return render(request, 'htmls/task/list.html', {'data':data})
 
 
@@ -285,27 +346,38 @@ def submit_feedback(request):
                 feedback.user = request.user
             feedback.save()
 
-            # Send email notification
-            subject = f"New Feedback on {feedback.get_feedback_type_display()}"
-            message = (
-                f"Feedback Details:\n\n"
-                f"User: {feedback.user or 'Anonymous'}\n"
-                f"Type: {feedback.get_feedback_type_display()}\n"
-                f"Project: {feedback.project.title if feedback.project else 'N/A'}\n"
-                f"Task: {feedback.task.title if feedback.task else 'N/A'}\n"
-                f"Rating: {feedback.get_rating_display() if feedback.rating else 'N/A'}\n"
-                f"Feedback: {feedback.feedback_text}\n"
-                f"Date: {feedback.date_submitted}"
-            )
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[settings.EMAIL_HOST_USER],  # Send to your email
-                fail_silently=False,
-            )
-
-            return render(request, 'htmls/feedback/thanku.html')  # Redirect to a thank-you page
+            # # Send email notification
+            # subject = f"New Feedback on {feedback.get_feedback_type_display()}"
+            # message = (
+            #     f"Feedback Details:\n\n"
+            #     f"User: {feedback.user or 'Anonymous'}\n"
+            #     f"Type: {feedback.get_feedback_type_display()}\n"
+            #     f"Project: {feedback.project.title if feedback.project else 'N/A'}\n"
+            #     f"Task: {feedback.task.title if feedback.task else 'N/A'}\n"
+            #     f"Rating: {feedback.get_rating_display() if feedback.rating else 'N/A'}\n"
+            #     f"Feedback: {feedback.feedback_text}\n"
+            #     f"Date: {feedback.date_submitted}"
+            # )
+            # try:
+            #     send_mail(
+            #         subject=subject,
+            #         message=message,
+            #         from_email=settings.EMAIL_HOST_USER,
+            #         recipient_list=['jitendrakarki988036@gmail.com'],  # Change this to the recipient's email"],
+            #         fail_silently=False,
+            #     )
+            #     return JsonResponse({'status': 'success', 'message': 'Email sent successfully!'})
+            # except Exception as e:
+            #     return JsonResponse({'status': 'error', 'message': str(e)})
     else:
         form = FeedbackForm()
-    return render(request, 'htmls/feedback/contact.html', {'form': form})
+
+    return render(request, 'htmls/feedback/sendmail.html', {'form': form})
+
+   
+
+
+    #         return render(request, 'htmls/feedback/thanku.html')  # Redirect to a thank-you page
+    # else:
+    #     form = FeedbackForm()
+    # return render(request, 'htmls/feedback/contact.html', {'form': form})

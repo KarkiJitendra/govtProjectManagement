@@ -42,6 +42,8 @@ INSTALLED_APPS = [
    'management',
    'tailwind',
    'theme',
+   'widget_tweaks',
+
 ]
 
 TAILWIND_APP_NAME = 'theme'
@@ -139,11 +141,20 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Directory where media files are 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-# settings.py
+load_dotenv()
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'sabrejiten9761@gmail.com'  # Your Gmail address
-EMAIL_HOST_PASSWORD = 'Saber_jiten@9761'  # Use an App Password if 2FA is enabled
+
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_HOST_USER = '18e8be4e4c2b11'
+EMAIL_HOST_PASSWORD = 'fc7067f00ea62f'
+EMAIL_PORT = '2525'
+
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')

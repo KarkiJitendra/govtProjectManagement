@@ -11,16 +11,21 @@
 
     <!-- Header -->
     <header class="bg-gray-800 text-white py-4">
-        <div class="flex justify-between items-center max-w-6xl mx-auto px-4">
+        <div class="flex justify-between items-center max-w-7.4xl mx-auto px-4">
             <div class="text-2xl font-bold">
                 Gaurishankar-2 <em>Projects</em>
             </div>
             <ul class="flex space-x-4">
-                <li><a href="#" class="px-4 py-2 rounded hover:bg-gray-700">Home</a></li>
-                <li><a href="#" class="px-4 py-2 rounded hover:bg-gray-700">Projects</a></li>
-                <li><a href="#" class="px-4 py-2 rounded hover:bg-gray-700">About</a></li>
-                <li><a href="#" class="px-4 py-2 rounded hover:bg-gray-700">Contact</a></li>
+                <li><a href="{% url 'dashboard' %}" class="px-4 py-2 hover:bg-gray-700 rounded">Home</a></li>
+                <li><a href="{% url 'ProjectList' %}" class="px-4 py-2 hover:bg-gray-700 rounded">Projects</a></li>
+                <li><a href="#" class="px-4 py-2 hover:bg-gray-700 rounded">About</a></li>
+                <li><a href="{% url 'thank-you' %}" class="px-4 py-2 hover:bg-gray-700 rounded">Contact</a></li>
             </ul>
+            <div  class="flex items-center space-x-2 ml-4  px-4 py-2">
+                <span class="text-x bg-white text-gray-600 shadow rounded-full px-4 py-2" >{{ user.username }}</span>
+                <a href="{% url 'logout' %}" class="text-x text-red-600 hover:text-red-1000 bg-white text-gray-600 shadow rounded-full px-4 py-2">Logout</a>
+            </div>
+            
         </div>
     </header>
 
