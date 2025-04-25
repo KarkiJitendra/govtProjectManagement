@@ -4,6 +4,8 @@ from .models import CustomUser, Task, Transaction, Feedback
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 
+
+
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task

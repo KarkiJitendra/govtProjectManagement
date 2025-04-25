@@ -115,7 +115,7 @@ def add_company(request):
             messages.error(request, "Error adding user. Please check the form.")
     else:
         form = Signin()
-    return render(request, 'htmls/user/adproject.html', {'form': form})
+    return render(request, 'htmls/user/addproject.html', {'form': form})
     
 
 # def add_company(request):
