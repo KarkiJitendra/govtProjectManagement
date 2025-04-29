@@ -1,5 +1,5 @@
 from lib2to3.fixes.fix_input import context
-
+import json
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRedirect
 from django.template.context_processors import request
 from django.db import transaction
@@ -15,9 +15,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 #################--userVIews---############
-
 from .forms import Signin
 from django.contrib import messages
+from django.db.models import Count
+
+from management.models import Project 
 # from django.contrib.auth.decorators import login_required
 # from .utils import get_features
 
@@ -94,7 +96,29 @@ def dashboard_view(request):
         'features': features
     }
 
-    return render(request, "htmls/user/dashboard.html", context)
+    return render(request, "htmls/user/newdash.html", context)
+
+ # adjust import if needed
+
+def pie_chart_view(request):
+    # Count how many projects are in each status
+    # category_counts = Project.objects.values('status').annotate(count=Count('status'))
+    plan = Project.objects.filter(status='Planning').count()
+    ongoing = Project.objects.filter(status='Ongoing').count()
+    completed = Project.objects.filter(status='Completed').count()
+    # Extract the status names and counts
+    label = ["Planning","Ongoing","Completed"]
+    # data = [plan,ongoing,completed]
+    daeta = [1,2,3]
+    print(label)
+
+    # context = {
+    #     'labels': json.dumps(labels),
+    #     'data': json.dumps(data),
+    # }
+    labels=json.dumps(label)
+    data = json.dumps(daeta)
+    return render(request, 'htmls/user/newdash.html', {labels:'labels',data:'data'})  # or 'dashboard.html' if that's your file
 
 
 
