@@ -100,27 +100,43 @@ def dashboard_view(request):
 
  # adjust import if needed
 
+# def pie_chart_view(request):
+#     # Count how many projects are in each status
+#     # category_counts = Project.objects.values('status').annotate(count=Count('status'))
+#     plan = Project.objects.filter(status='Planning').count()
+#     print(plan)
+#     ongoing = Project.objects.filter(status='Ongoing').count()
+#     print(ongoing)
+#     completed = Project.objects.filter(status='Completed').count()
+#     print(completed)
+#     # Extract the status names and counts
+#     labels = ["Planning","Ongoing","Completed"]
+#     data = [plan,ongoing,completed]
+#     print(labels)
+#     print(data)
+
+#     # context = {
+#     #     'labels': json.dumps(labels),
+#     #     'data': json.dumps(data),
+#     # }
+#     # labels=json.dumps(labels)
+#     # data = json.dumps(daeta)
+#     return render(request, 'htmls/user/newdash.html', {'labels': labels, 'data': data})
+
+
 def pie_chart_view(request):
-    # Count how many projects are in each status
-    # category_counts = Project.objects.values('status').annotate(count=Count('status'))
     plan = Project.objects.filter(status='Planning').count()
     ongoing = Project.objects.filter(status='Ongoing').count()
     completed = Project.objects.filter(status='Completed').count()
-    # Extract the status names and counts
-    label = ["Planning","Ongoing","Completed"]
-    # data = [plan,ongoing,completed]
-    daeta = [1,2,3]
-    print(label)
 
-    # context = {
-    #     'labels': json.dumps(labels),
-    #     'data': json.dumps(data),
-    # }
-    labels=json.dumps(label)
-    data = json.dumps(daeta)
-    return render(request, 'htmls/user/newdash.html', {labels:'labels',data:'data'})  # or 'dashboard.html' if that's your file
+    labels = ["Planning", "Ongoing", "Completed"]
+    data = [plan, ongoing, completed]
 
-
+    context = {
+        'labels': json.dumps(labels),
+        'data': json.dumps(data),
+    }
+    return render(request, 'htmls/user/dashboard.html', context)
 
 
 def add_company(request):
@@ -162,7 +178,7 @@ def add_company(request):
 #################--ProjectVIews---############
 def createproject(request):
     if request.method == 'POST':
-        form = ProjectForm(request.POST)
+        form = ProjectForm(request.POST, request.FILES)  # Include request.FILES for file uploads
         if form.is_valid():
             form.save()
             return redirect('ProjectList')  # Redirect to a list or details page after successful creation
@@ -192,7 +208,7 @@ def projectedit(request, id):
     data = get_object_or_404(Project, id=id)
     # form = ProjectForm(instance=data)
     if request.method == 'POST':
-        form = ProjectForm(request.POST, instance=data)
+        form = ProjectForm(request.POST, instance=data, files=request.FILES)  # Include request.FILES for file uploads
         if form.is_valid():
             form.save()
             data = Project.objects.get(id=id)

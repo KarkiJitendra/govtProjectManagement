@@ -6,10 +6,10 @@ from .views import login_view, signin_view, dashboard_view, createproject, proje
 urlpatterns = [
     path('login/', login_view, name='login'),
     path('', signin_view, name='signup'),
-    path('dashboard/', dashboard_view, name='dashboard'),
+    # path('dashboard/', dashboard_view, name='dashboard'),
     path('logout/', login_view, name='logout'),
     path('projectuser/',add_company, name='add_company'), 
-    path('pie_chart/', pie_chart_view, name='pie_chart'),
+    path('dashboard/', pie_chart_view, name='dashboard'),
     #project urls
     path('project/', createproject, name='create_project'),
     path('project/list/', projectlist, name='ProjectList'),

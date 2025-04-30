@@ -10,7 +10,7 @@
                 <!-- Logo -->
                 <div>
                     <a href="{% url 'dashboard' %}">
-                        <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-10">
+                        <!-- <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-10"> -->
                     </a>
                 </div>
                 <!-- User Info and Logout -->
@@ -36,29 +36,57 @@
     </div>
 </div>
 
-<!-- Chart.js Library -->
-<script src="{% static 'management/static/js/chart.min.js' %}"></script>
+<!-- Load Chart.js from local static file -->
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('pieChart').getContext('2d');
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM fully loaded and parsed");
+
+    const ctx = document.getElementById('pieChart').getContext('2d');
+    if (!ctx) {
+        console.error("Canvas context not found");
+        return;
+    }
+
+    const chartLabels = JSON.parse('{{ labels|safe }}');
+    const chartData = JSON.parse('{{ data|safe }}');
+
+    console.log("Labels:", chartLabels);
+    console.log("Data:", chartData);
+
+    if (chartLabels && chartData) {
         const pieChart = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: {{ labels|safe }},
+                labels: chartLabels,
                 datasets: [{
-                    data: {{ data|safe }},
+                    data: chartData,
                     backgroundColor: [
                         '#FF6384',
                         '#36A2EB',
                         '#FFCE56',
                     ],
-                    borderColor: [
-                        '#fff'
-                    ],
+                    borderColor: '#fff',
                     borderWidth: 1
                 }]
             },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Project Status Overview'
+                    }
+                }
+            }
         });
-    });
+        console.log(pieChart);
+    } else {
+        console.error("Error parsing JSON data");
+    }
+});
 </script>
 {% endblock %}

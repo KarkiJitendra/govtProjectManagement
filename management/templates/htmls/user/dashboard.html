@@ -2,8 +2,11 @@
 {% block content %}
 {% load static %}
 
-<div class="bg-gradient-to-br from-gray-100 to-blue-50 py-12 min-h-md-screen flex items-center justify-center">
-    <div class="max-w-6xl mx-auto px-6 sm:px-10">
+
+<!-- <div     class="bg-cover bg-center h-screen py-1 min-h-screen flex items-center justify-center padding-top-0"  style="background-image: url('{% static 'images/backphoto.jpg' %}');"> -->
+
+<div class="bg-gradient-to-br from-blue-500 to-green-400 py-1 min-h-md-screen flex items-center justify-center padding-top-0">
+    <div class="max-w-6xl mx-auto px-6 py-1 sm:px-0 sm:py-2">
         <!-- Welcome and Role Info -->
         <div class="bg-white rounded-2xl shadow-lg p-8 mb-10">
             <div class="flex items-center justify-between">
@@ -31,7 +34,7 @@
         </div>
 
         <!-- Features Section -->
-        <div class="bg-white rounded-2xl shadow-lg p-8 mb-10">
+        <!-- <div class="bg-white rounded-2xl shadow-lg p-8 mb-10">
             <h3 class="text-2xl font-semibold text-blue-800 mb-4">✨ You can perform:</h3>
             <ul class="list-disc list-inside text-gray-800 space-y-2 pl-4">
                 {% for feature in features %}
@@ -40,8 +43,78 @@
                     <li class="text-red-600">No features available for your role.</li>
                 {% endfor %}
             </ul>
+        </div> -->
+        <div class="container mx-auto px-6 py-1 sm:px-0 sm:py-2">
+            <div class="grid grid-cols-12 gap-4">
+                <!-- Pie Chart Card -->
+                <div class="col-span-12 md:col-span-6 lg:col-span-4">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-bold mb-9 text-center">Project Status Overview</h3>
+                        <canvas id="pieChart" width="800" height="800"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-10">
+
+        
     </div>
 </div>
 
+<!-- Load Chart.js from local static file -->
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM fully loaded and parsed");
+
+    const ctx = document.getElementById('pieChart').getContext('2d');
+    if (!ctx) {
+        console.error("Canvas context not found");
+        return;
+    }
+
+    const chartLabels = JSON.parse('{{ labels|safe }}');
+    const chartData = JSON.parse('{{ data|safe }}');
+
+    console.log("Labels:", chartLabels);
+    console.log("Data:", chartData);
+
+    if (chartLabels && chartData) {
+        const pieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    data: chartData,
+                    backgroundColor: [
+                        '#FF6384',
+                        '#36A2EB',
+                        '#FFCE56',
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Project Status Overview'
+                    }
+                }
+            }
+        });
+        console.log(pieChart);
+    } else {
+        console.error("Error parsing JSON data");
+    }
+});
+</script>
+<script>
+    
+</script>
 {% endblock %}
