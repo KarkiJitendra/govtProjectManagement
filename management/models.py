@@ -7,10 +7,12 @@ from django.conf import settings
 class CustomUser(AbstractUser):
         ROLE_CHOICES = [
             ('Government', 'Government'),
-            ('Company', 'Company'),
+            ('Company_Head', 'Company_Head'),
+            ('Company_Employee', 'Company_Employee'),
             ('Public', 'Public'),
         ]
         role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='Public')
+        must_change_password = models.BooleanField(default=False)
 
 
 class Project(models.Model):
