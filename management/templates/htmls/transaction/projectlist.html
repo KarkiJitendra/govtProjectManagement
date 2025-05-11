@@ -8,13 +8,15 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-800 text-white">
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">S.N</th>
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">User</th>
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Amount</th>
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Type</th>
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Description</th>
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Date</th>
+                    {% if user.role == 'Company_admin' %}
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -27,10 +29,12 @@
                             <td class="px-4 py-3">{{ transaction.transaction_type }}</td>
                             <td class="px-4 py-3">{{ transaction.description }}</td>
                             <td class="px-4 py-3">{{ transaction.date|date:"Y-m-d H:i" }}</td>
+                            {% if user.role == 'Company_admin' %}
                             <td class="px-4 py-3 space-x-2">
                                 <a href="{% url 'edit_transaction' transaction.id %}" class="inline-block bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm">Edit</a>
                                 <a href="{% url 'delete_transaction' transaction.id %}" class="inline-block bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700 text-sm">Delete</a>
                             </td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 {% else %}
@@ -42,10 +46,22 @@
         </table>
     </div>
 
-    <div class="mt-6 flex space-x-4">
-        <a href="{% url 'create_transaction' %}" class="bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600">Add New Transaction</a>
-        <a href="{% url 'ProjectList' %}" class="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600">Back to Projects</a>
+    <div class="mt-6 flex justify-between">
+        <div class="flex space-x-4">
+            <a href="{% url 'project-transaction' project.id %}" class="bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600">Add New Transaction</a>
+            <a href="{% url 'ProjectList' %}" class="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600">Back to Projects</a>
+        </div>
+        <div class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-indigo-600 font-medium">
+            Remaining Budget: <span class="text-black font-semibold">$. {{ remaining_balance }}</span>
+        </div>
     </div>
+    <!-- <div class="mt-6 text-right bg-white shadow-md rounded-lg p-4">
+        <p class="text-gray-700 font-medium">
+            Total Budget: <span class="text-black font-semibold">$. {{ project.budget }}</span>
+        <p class="text-gray-700 font-medium">
+            Remaining Budget: <span class="text-black font-semibold">$. {{ remaining_balance }}</span>
+        </p>
+    </div> -->
 </div>
 {% endblock %}
 {% block scripts %}

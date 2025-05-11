@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRe
 from django.template.context_processors import request
 from django.db import transaction
 
-from .models import Project, Task, Transaction
+from .models import CustomUser, Project, Task, Transaction
 from .forms import ProjectForm, TaskForm, TransactionForm, FeedbackForm, Signin_User, CompanyCreationForm, CompanyUserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from .utils import get_features
@@ -232,20 +232,56 @@ def logout_view(request):
     logout(request)
     return redirect('login')  # Redirect to login page after logout
 
-@login_required
-def pie_chart_view(request):
-    plan = Project.objects.filter(status='Planning').count()
-    ongoing = Project.objects.filter(status='Ongoing').count()
-    completed = Project.objects.filter(status='Completed').count()
+from django.db.models import Sum
+# def pie_chart_view(request):
+#     projects = Project.objects.all()
+#     plan = Project.objects.filter(status='Planning').count()
+#     ongoing = Project.objects.filter(status='Ongoing').count()
+#     completed = Project.objects.filter(status='Completed').count()
 
-    labels = ["Planning", "Ongoing", "Completed"]
-    data = [plan, ongoing, completed]
+#     labels = ["Planning", "Ongoing", "Completed"]
+#     data = [plan, ongoing, completed]
+
+#     bar_data = []
+#     for p in projects:
+#         bar_data.append({
+#             'name': p.title,
+#             'allocated': p.budget,
+#             'used': Transaction.objects.filter(project=p).aggregate(Sum('amount'))['amount__sum'] or 0
+#         })
+#     context = {
+#         'labels': json.dumps(labels),
+#         'data': json.dumps(data),
+#         'budget_data': bar_data,
+       
+#     }
+#     print(context)
+#     return render(request, 'htmls/user/dashboard.html', context)
+
+# views.py
+from django.db.models import Count, Sum
+
+@login_required
+def chart_view(request):
+    # Fetch project status data for the Pie Chart
+    status_data = Project.objects.values('status').annotate(count=Count('id'))
+
+    # Fetch budget data for the Bar Chart
+    projects = Project.objects.all()
+    bar_data = []
+    for p in projects:
+        bar_data.append({
+            'name': p.title,
+            'allocated':    float(p.budget),
+            'used': float(Transaction.objects.filter(project=p).aggregate(Sum('amount'))['amount__sum'] or 0)
+        })
 
     context = {
-        'labels': json.dumps(labels),
-        'data': json.dumps(data),
+        'status_data': list(status_data),
+        'budget_data': bar_data
     }
     return render(request, 'htmls/user/dashboard.html', context)
+
 
 
 user = get_user_model()
@@ -363,6 +399,27 @@ def viewtask(request, project_id):
         # Handle the case where project_id cannot be converted to an integer
         return render(request, 'error.html', {'message': 'Invalid project ID'})
 
+@login_required
+def projectTransaction(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    remaining_budget = project.get_remaining_budget()
+    transactions = Transaction.objects.filter(project=project)
+    
+    if request.method == 'POST':
+        form = TransactionForm(request.POST)
+        if form.is_valid():
+            transaction = form.save(commit=False)
+            transaction.project = project  # Assign the project
+            transaction.user = request.user  # Assign the current user
+            transaction.save()
+            return redirect('transaction_list', project_id=project_id)  # Redirect to the transaction list for the project
+        else:
+            print(form.errors)  # Print form errors for debugging
+            return render(request, 'htmls/transaction/projectran.html', {'form': form, 'project': project, 'remaining_budget': remaining_budget})
+    else:
+        # Pre-fill the form with initial data if the request is a GET request
+        form = TransactionForm(initial={'project': project, 'user': request.user})
+        return render(request, 'htmls/transaction/projectran.html', {'form': form, 'project': project, 'remaining_budget': remaining_budget})
 
 
 #################--TaskViews---############
@@ -431,8 +488,8 @@ def taskedit(request, id):
 
 
 
-#################--TransactionViews---############
-@login_required
+# #################--TransactionViews---############
+# @login_required
 def createtransaction(request):
     if request.method == 'POST':
         form = TransactionForm(request.POST)
@@ -541,3 +598,7 @@ def submit_feedback(request):
     # else:
     #     form = FeedbackForm()
     # return render(request, 'htmls/feedback/contact.html', {'form': form})
+    
+    
+def about(request):
+    return render(request, 'htmls/feedback/about.html')

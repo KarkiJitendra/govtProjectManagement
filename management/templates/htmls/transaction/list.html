@@ -14,7 +14,9 @@
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Type</th>
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Description</th>
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Date</th>
+                    {% if user.role == 'Company_admin' %}
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -27,15 +29,17 @@
                             <td class="px-4 py-3">{{ transaction.transaction_type }}</td>
                             <td class="px-4 py-3">{{ transaction.description }}</td>
                             <td class="px-4 py-3">{{ transaction.date|date:"Y-m-d H:i" }}</td>
+                            {% if user.role == 'Company_admin' %}
                             <td class="px-4 py-3 space-x-2">
                                 <a href="{% url 'edit_transaction' transaction.id %}" class="inline-block bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm">Edit</a>
                                 <a href="{% url 'delete_transaction' transaction.id %}" class="inline-block bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700 text-sm">Delete</a>
                             </td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="7" class="px-4 py-4 text-center text-gray-500">No transactions found for this project.</td>
+                        <td colspan="7" class="px-4 py-4 text-center text-gray-500">No transactions Available till now.</td>
                     </tr>
                 {% endif %}
             </tbody>

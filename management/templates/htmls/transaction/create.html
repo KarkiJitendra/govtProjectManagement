@@ -6,21 +6,18 @@
 
     <form method="post" class="space-y-5">
         {% csrf_token %}
-        <!-- {% for field in form %}
+        {% for field in form %}
             <div>
                 <label class="block mb-1 text-sm font-medium text-gray-700">{{ field.label_tag }}</label>
                 {{ field }}
-                <!-- {% if field.errors %}
+                {% if field.errors %}
                     <p class="text-sm text-red-600">{{ field.errors }}</p>
-                {% endif %} -->
-                <!-- {% for error in form.field.errors  %}
+                {% endif %}
+                {% for error in form.field.errors  %}
                     <p class="text-sm text-red-600">{{ error }}</p>
                 {% endfor %}
             </div>
-        {% endfor %} -->
-          -->
-        <div class="space-y-2">
-            {{ form.user }}
+        {% endfor %}
         
         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
             Create Transaction

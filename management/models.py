@@ -33,10 +33,9 @@ class Project(models.Model):
         return f"{self.title}, {self.status}, {self.start_date}"
     
     def get_remaining_budget(self):
-        total_spent = self.transaction_set.aggregate(total=models.Sum('amount'))['total'] or 0
+        total_spent = self.transaction_set.filter(transaction_type__in=['Debit', 'Credit']).aggregate(total=models.Sum('amount'))['total'] or 0
         return self.budget - total_spent
-    
-    
+
     
 
 class Task(models.Model):
@@ -59,22 +58,47 @@ class Transaction(models.Model):
     
     
     def clean(self):
-        # Example: Ensure amount is positive for credit transactions
-        if self.transaction_type == 'Credit' and self.amount <= 0:
+        # Ensure amount is positive for credit transactions
+        if self.transaction_type == 'Credit' and self.amount is not None and self.amount <= 0:
             raise ValidationError("Credit transactions must have a positive amount.")
-        
-    def get_remaining_budget(self):
-        total_spent = self.transaction_set.aggregate(total=models.Sum('amount'))['total'] or 0
-        return self.budget - total_spent
-        
-    def save(self, *args, **kwargs):
-        self.clean()  # Perform validation
-        if  self.project:
-            # Update the project's budget
+
+        # Ensure amount is positive for debit transactions
+        if self.transaction_type == 'Debit' and self.amount is not None and self.amount <= 0:
+            raise ValidationError("Debit transactions must have a positive amount.")
+
+        # Check project budget if project is specified
+        if self.project:
             remaining_budget = self.project.get_remaining_budget()
             if self.amount > remaining_budget:
                 raise ValidationError("Insufficient budget.")
+
+    def save(self, *args, **kwargs):
+        # Perform validation
+        self.clean()
+        # Call the parent class's save method
         super().save(*args, **kwargs)
+ 
+    # def get_remaining_budget(self):
+    #     total_spent = self.transaction_set.aggregate(total=models.Sum('amount'))['total'] or 0
+    #     return self.budget - total_spent
+        
+    # def save(self, *args, **kwargs):
+    #     self.clean()  # Perform validation
+    #     if  self.project:
+    #         # Update the project's budget
+    #         remaining_budget = self.project.get_remaining_budget()
+    #         if self.amount > remaining_budget:
+    #             raise ValidationError("Insufficient budget.")
+    #     if self.transaction_type == 'Debit':
+    #         # Ensure the amount is positive for debit transactions
+    #         if self.amount <= 0:
+    #             raise ValidationError("Debit transactions must have a positive amount.")
+    #     if self.transaction_type == 'Credit':   
+    #         # Ensure the amount is positive for credit transactions
+    #         if self.amount <= 0:
+    #             raise ValidationError("Credit transactions must have a positive amount.")
+    #     # Call the parent class's save method       
+    #     super().save(*args, **kwargs)
 
 
 

@@ -210,14 +210,12 @@ class CompanyUserCreationForm(forms.ModelForm, BaseForm):
             field.required = True  # Make all fields required            
 
 #################--userVIews---############
-from .models import Transaction
 
-class TransactionForm(forms.ModelForm, BaseForm):
+class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
-        fields = ['user', 'project', 'amount', 'transaction_type', 'description']
+        exclude = ['user']  # user will be assigned in the view, not through the form
         widgets = {
-            'user': forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300'}),
             'project': forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300'}),
             'amount': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300'}),
             'transaction_type': forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300'}),
@@ -227,25 +225,19 @@ class TransactionForm(forms.ModelForm, BaseForm):
                 'placeholder': 'Enter transaction description...'
             }),
         }
+
     def clean(self):
         cleaned_data = super().clean()
-        amount = cleaned_data.get("amount")
-        transaction_type = cleaned_data.get("transaction_type")
-        # if transaction_type == 'debit' and amount < 0:
-        #     raise forms.ValidationError("Debit transactions cannot have a negative amount.")
-        # if transaction_type == 'credit' and amount > 0:
-        #     # raise forms.ValidationError("Credit transactions cannot have a positive amount.")
-        #     self.add_error("Credit transactions cannot have a positive amount.")
-        if amount is None:
-            self.add_error('amount', "Amount is required.")
-            raise forms.ValidationError("Amount is required.")
-        if amount <= 0:
-            self.add_error('amount', "Amount must be greater than zero.")
-            raise forms.ValidationError("Amount must be greater than zero.")
-        
+        transaction_type = cleaned_data.get('transaction_type')
+        amount = cleaned_data.get('amount')
 
+        if transaction_type not in ['Credit', 'Debit']:
+            self.add_error('transaction_type', "Invalid transaction type.")
 
+        if amount is not None and amount <= 0:
+            self.add_error('amount', f"{transaction_type} transactions must have a positive amount.")
 
+        return cleaned_data
 
 
 class FeedbackForm(forms.ModelForm):
