@@ -7,7 +7,7 @@ from django.db import transaction
 from .models import CustomUser, Project, Task, Transaction
 from .forms import ProjectForm, TaskForm, TransactionForm, FeedbackForm, Signin_User, CompanyCreationForm, CompanyUserCreationForm
 from django.contrib.auth import authenticate, login, logout
-from .utils import get_features
+from .utils import get_features, send_email
 from .validators import validate_email, validate_password, validate_name, validate_phone_number, validate_age
 from django.core.validators import EmailValidator, RegexValidator
 from django.core.exceptions import ValidationError
@@ -267,7 +267,7 @@ def chart_view(request):
     status_data = Project.objects.values('status').annotate(count=Count('id'))
 
     # Fetch budget data for the Bar Chart
-    projects = Project.objects.all()
+    projects = Project.objects.filter(status__in=['Ongoing', 'Planning'])    
     bar_data = []
     for p in projects:
         bar_data.append({
@@ -293,41 +293,40 @@ user = get_user_model()
 # def generate_temp_password(length=10):
 #     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))  # Default length is 10
 
+# views.py
+
+
+@login_required 
+
 def add_company(request):
     if request.method == 'POST':
         form = CompanyCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
 
-            # Generate and set temporary password
-            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))  # Default length is 10
+            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
             user.set_password(temp_password)
-
-            # Mark as requiring password change
             user.force_password_change = True
-            user.role = "Company_Head"  # Ensure role is set to Company
+            user.role = "Company_Head"
             user.save()
 
-            # Send email with the temp password
-            send_mail(
-                subject='Your Company Account Login Credentials',
-                message=f"Dear {user.username},\n\nYour account has been created.\nTemporary password: {temp_password}\nPlease log in and change your password immediately.",
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
+            subject = 'Your Company Account Login Credentials'
+            text_part = f"Hello {user.username}, your password is {temp_password}"
+            html_part = f"<h3>Hello {user.username},</h3><p>Your password is <strong>{temp_password}</strong></p>"
 
-            messages.success(request, "Company admin added and email sent successfully!")
-            return redirect('dashboard')
+            try:
+                send_email(subject, text_part, html_part, user.email, user.username)
+                messages.success(request, "Email sent successfully.")
+            except Exception as e:
+                messages.error(request, f"Failed to send email: {e}")
+            
+            return redirect('change_password')
         else:
             messages.error(request, "Error adding company. Please check the form.")
     else:
         form = CompanyCreationForm()
     
     return render(request, 'htmls/user/adproject.html', {'form': form})
-
-
-    
 
 #################--ProjectVIews---############
 @login_required
@@ -601,4 +600,6 @@ def submit_feedback(request):
     
     
 def about(request):
-    return render(request, 'htmls/feedback/about.html')
+    number = Project.objects.filter(status='Completed').count()
+    budget = Transaction.objects.aggregate(Sum('amount'))['amount__sum'] or 0
+    return render(request, 'htmls/feedback/about.html', {'number': number, 'budget': budget})

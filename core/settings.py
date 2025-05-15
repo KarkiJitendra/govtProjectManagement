@@ -149,22 +149,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# from dotenv import load_dotenv
-# from dotenv import load_dotenv
 
-# load_dotenv()
-
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-
-# EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-# EMAIL_HOST_USER = '18e8be4e4c2b11'
-# EMAIL_HOST_PASSWORD = 'fc7067f00ea62f'
-# EMAIL_PORT = '2525'
-
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-
+MJ_APIKEY_PUBLIC = os.getenv('MJ_APIKEY_PUBLIC')
+MJ_APIKEY_PRIVATE = os.getenv('MJ_APIKEY_PRIVATE')
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP provider

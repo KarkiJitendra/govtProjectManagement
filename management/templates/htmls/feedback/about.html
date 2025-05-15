@@ -1,42 +1,226 @@
 {% extends 'htmls/user/main.html' %}
 {% block content %}
+{% load static %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<section class="bg-gradient-to-r from-indigo-100 to-purple-100 py-16 px-0">
+    <div class="w-full mx-auto px-4">
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-indigo-700 tracking-wide">Discover the Future of Governance</h1>
+        <h2 class="text-2xl font-semibold text-gray-700">Introducing the Project Management Portal</h2>
+      </div>
+  
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Left Column: Image or Illustration -->
+        <div class="hidden md:block">
+          <img src="{% static 'images/backphoto.jpg' %}" alt="Project Management Portal Illustration" class="w-full h-full rounded-xl shadow-xl">
+        </div>
+  
+        <!-- Right Column: Content -->
+        <div class="bg-white shadow-xl rounded-xl p-8 text-gray-800 space-y-6 leading-relaxed">
+          <p class="text-lg">
+            Welcome to the heart of innovation in public service—a centralized <strong class="text-indigo-600">Project Management System</strong> meticulously crafted for the government sector. This platform is not just a tool; it's a transformative force that revolutionizes the way we plan, monitor, and execute public infrastructure and development projects.
+          </p>
+  
+          <p class="text-lg">
+            Imagine a world where <strong class="text-indigo-600">government officials</strong> can securely log in and effortlessly track the progress of ongoing, completed, and upcoming projects. This system is that world—a digital sanctuary where transparency, accountability, and seamless coordination between departments thrive.
+          </p>
+  
+          <div class="bg-indigo-100 p-4 rounded-xl">
+            <h3 class="text-2xl font-bold text-indigo-700 mb-4">Key Features</h3>
+            <ul class="list-disc list-inside ml-4 mt-2">
+              <li class="text-indigo-600">Real-time project tracking</li>
+              <li class="text-indigo-600">Budget allocation monitoring</li>
+              <li class="text-indigo-600">Document uploads</li>
+              <li class="text-indigo-600">Feedback management</li>
+            </ul>
+          </div>
+  
+          <p class="text-lg">
+            By digitizing project workflows, this portal significantly reduces administrative overhead and enhances strategic planning. It's like having a digital assistant that keeps everything in perfect order, allowing you to focus on what truly matters.
+          </p>
+  
+          <p class="text-lg">
+            Developed with a focus on <strong class="text-indigo-600">data integrity</strong> and <strong class="text-indigo-600">user access control</strong>, the portal adheres to the highest standards of information security. Only authorized personnel are granted access, ensuring that project oversight remains in responsible hands.
+          </p>
+  
+          <p class="text-lg">
+            This system is more than just software; it's a commitment to <strong class="text-indigo-600">better governance</strong>, efficient resource utilization, and timely delivery of public services. It's a beacon of progress, guiding us toward a future where every project is a success story.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<section class="bg-gray-100 py-16">
+<section class="bg-white py-16">
   <div class="max-w-4xl mx-auto px-6">
     <div class="text-center mb-12">
-      <h1 class="text-3xl font-bold text-indigo-700">About the Project Management Portal</h1>
+      <h2 class="text-3xl font-bold text-indigo-700">Our Success Stories</h2>
+      <p class="text-lg text-gray-700 font-bold">Explore the impact of our projects through these success stories.</p>
     </div>
 
-    <div class="bg-white shadow-xl rounded-xl p-8 text-gray-800 space-y-6 leading-relaxed">
-      <p>
-        This platform is a centralized <strong>Project Management System</strong> designed exclusively for government use. It enables efficient planning, monitoring, and execution of public infrastructure and development projects.
-      </p>
+    <!-- Interactive Timeline -->
+    <div class="timeline-container">
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-content">
+            <h2 class="font-bold">Project A: New Highway Construction</h2>
+            <p class="font-semibold ">Completed ahead of schedule, improving transportation efficiency and reducing traffic congestion.</p>
+            <img src="{% static 'images/road.jpeg' %}" alt="Project A" class="w-full h-80 object-cover">
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-content">
+            <h3 class="font-bold" >Project B: Community Health Center</h3>
+            <p class="font-semibold">Successfully opened, providing better healthcare access to thousands of residents.</p>
+            <img src="{% static 'images/clinic.jpeg' %}" alt="Project B" class="w-full h-80 object-cover">
+          </div>
+        </div>
+        <!-- Add more timeline items as needed -->
+      </div>
+    </div>
 
-      <p>
-        <strong>Government officials</strong> can securely log in to track the progress of ongoing, completed, and upcoming projects. The system ensures transparency, accountability, and streamlined coordination between departments.
-      </p>
+    <!-- Video Testimonials -->
+    <div class="video-testimonials">
+      <h2 class="text-3xl font-bold text-center mb-8">Hear from Our Stakeholders</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="video-container">
+          <iframe src="https://www.youtube.com/embed/your-video-id" frameborder="0" allowfullscreen></iframe>
+          <p class="text-gray-700">Testimonial from John Doe, Project Manager</p>
+        </div>
+        <div class="video-container">
+          <iframe src="https://www.youtube.com/embed/your-video-id" frameborder="0" allowfullscreen></iframe>
+          <p class="text-gray-700">Testimonial from Jane Smith, Community Member</p>
+        </div>
+      </div>
+    </div>
 
-      <p>
-        Features include:
-        <ul class="list-disc list-inside ml-4 mt-2">
-          <li>Real-time project tracking</li>
-          <li>Budget allocation monitoring</li>
-          <li>Document uploads</li>
-          <li>Feedback management</li>
-        </ul>
-      </p>
+    <!-- Interactive Map -->
+    <div class="map-container">
+      <h2 class="text-3xl font-bold text-center mb-8">Our Projects Across the Region</h2>
+      <div id="map" style="height: 500px;"></div>
+      <script>
+        var map = L.map('map').setView([27.9533, 86.3358], 10); // Coordinates in decimal degrees and zoom level added
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-      <p>
-        By digitizing project workflows, this portal significantly reduces administrative overhead and improves strategic planning.
-      </p>
+        var marker = L.marker([27.66213048853746, 86.20554280688008]).addTo(map)
+          .bindPopup('<h3>Gurash park</h3><p>To enhance the tourism and preserve nature the park is built and it has enriched property to attarct the tourists.</p>')
+          .openPopup();
+        var marker = L.marker([27.69625757047094, 86.15003327305939]).addTo(map)
+          .bindPopup('<h3>Seti Devi H.S.S</h3><p>Provision for Higher education in the village.</p>')
+          .openPopup();
+        var marker = L.marker([27.694070849303586, 86.15225385923593]).addTo(map)
+          .bindPopup('<h3>Oda Health Care Center</h3><p>Health Facility for the people in local level.</p>')
+          .openPopup();
 
-      <p>
-        Developed with a focus on <strong>data integrity</strong> and <strong>user access control</strong>, the portal adheres to the highest standards of information security. Only authorized personnel are granted access to ensure responsible project oversight.
-      </p>
 
-      <p>
-        This system stands as a commitment to <strong>better governance</strong>, efficient resource utilization, and timely delivery of public services.
-      </p>
+        var startPoint = [27.692461752724185, 86.1477313639713];
+        var endPoint = [27.689715544737318, 86.1452298371935];
+        var startMarker = L.marker(startPoint).addTo(map)
+            .bindPopup('<h3>Start Point</h3><p>Beginning of the road construction.</p>')
+            .openPopup();
+        var endMarker = L.marker(endPoint).addTo(map)
+         .bindPopup('<h3>End Point</h3><p>End of the road construction.</p>')
+         .openPopup();
+         var roadLine = L.polyline([startPoint, endPoint], {
+            color: 'red',
+            weight: 5,
+            opacity: 0.8
+            }).addTo(map);
+            roadLine.bindPopup('<h3>Road Construction</h3><p>Construction of a new road between these points.</p>').openPopup();
+
+         
+      </script>
+    </div>
+
+    <!-- Infographics and Data Visualizations -->
+    <div class="infographics">
+      <h2 class="text-3xl font-bold text-center mb-8">Key Achievements</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="infographic-item">
+          <h3>Projects Completed</h3>
+          <p class="text-4xl font-bold">{{ number }}</p>
+          <p class="text-gray-700">Successfully delivered projects</p>
+        </div>
+        <div class="infographic-item">
+          <h3>Budget Savings</h3>
+          <p class="text-4xl font-bold">${{ budget }}</p>
+          <p class="text-gray-700">Total savings through efficient management</p>
+        </div>
+        <div class="infographic-item">
+          <h3>Communities Impacted</h3>
+          <p class="text-4xl font-bold">100,000+</p>
+          <p class="text-gray-700">People benefiting from our projects</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case Studies and Detailed Stories -->
+    <div class="case-studies">
+      <h2 class="text-3xl font-bold text-center mb-8">Success Stories</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="case-study-card">
+          <img src="{% static 'images/road.jpeg' %}" alt="Project A" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <h3 class="text-2xl font-bold">Project A: New Highway Construction</h3>
+            <p class="text-gray-700">Completed ahead of schedule, improving transportation efficiency and reducing traffic congestion.</p>
+            <a href="/case-study/project-a" class="text-indigo-600 hover:underline">Read More</a>
+          </div>
+        </div>
+        <div class="case-study-card">
+          <img src="{% static 'images/clinic.jpeg' %}" alt="Project B" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <h3 class="text-2xl font-bold">Project B: Community Health Center</h3>
+            <p class="text-gray-700">Successfully opened, providing better healthcare access to thousands of residents.</p>
+            <a href="/case-study/project-b" class="text-indigo-600 hover:underline">Read More</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User-Generated Content -->
+    <div class="user-generated-content">
+      <h2 class="text-3xl font-bold text-center mb-8">Community Voices</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="user-story">
+          <img src="{% static 'images/backphoto.jpg' %}" alt="User Photo" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <p class="text-gray-700">"This project has changed my life. Thank you for making it happen."</p>
+            <p class="text-indigo-600">John Doe, Community Member</p>
+          </div>
+        </div>
+        <div class="user-story">
+          <img src="{% static 'images/backphoto.jpg' %}" alt="User Photo" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <p class="text-gray-700">"The new health center is a blessing for our community."</p>
+            <p class="text-indigo-600">Jane Smith, Community Member</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slideshow Carousel -->
+    <div class="slideshow-carousel">
+      <h2 class="text-3xl font-bold text-center mb-8">Featured Success Stories</h2>
+      <div class="carousel">
+        <div class="carousel-item">
+          <img src="{% static 'images/backphoto.jpg' %}" alt="Project A" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <h3 class="text-2xl font-bold">Project A: New Highway Construction</h3>
+            <p class="text-gray-700">Completed ahead of schedule, improving transportation efficiency and reducing traffic congestion.</p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'images/backphoto.jpg' %}" alt="Project B" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <h3 class="text-2xl font-bold">Project B: Community Health Center</h3>
+            <p class="text-gray-700">Successfully opened, providing better healthcare access to thousands of residents.</p>
+          </div>
+        </div>
+        <!-- Add more carousel items as needed -->
+      </div>
     </div>
   </div>
 </section>

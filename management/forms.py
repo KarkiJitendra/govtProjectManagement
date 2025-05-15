@@ -107,22 +107,24 @@ class ProjectForm(forms.ModelForm, BaseForm):
             raise forms.ValidationError('Budget must be greater than zero.')
         return budget
 
-    def clean_end_date(self):
-        end_date = self.cleaned_data['end_date']
-        if not self.instance.pk:
-        # If creating a new instance, you can set a default start_date or handle it differently
-            start_date = timezone.now().date()  # Set to current date
-        else:
-        # If updating an existing instance, ensure start_date is not None
-            if start_date is None:
-                raise ValidationError('Start date must be set before setting the end date.')
-  
+def clean_end_date(self):
+    end_date = self.cleaned_data.get('end_date')
+    
+    # Get the start_date from the instance if it exists, otherwise use the current date
+    if self.instance.pk:
+        start_date = self.instance.start_date
+    else:
+        start_date = timezone.now().date()  # Set to current date
 
-        if end_date and start_date and end_date < start_date:
-            raise ValidationError('End date must be after the start date.')
+    # Ensure start_date is not None
+    if start_date is None:
+        raise ValidationError('Start date must be set before setting the end date.')
 
-        return end_date
+    # Validate that end_date is after start_date
+    if end_date and start_date and end_date < start_date:
+        raise ValidationError('End date must be after the start date.')
 
+    return end_date
 class Signin(forms.ModelForm, BaseForm):
     password1 = forms.CharField(widget=forms.PasswordInput)
     password2 = forms.CharField(widget=forms.PasswordInput)
@@ -188,15 +190,27 @@ class Signin_User(UserCreationForm, forms.ModelForm, BaseForm):
 
 
 
-class CompanyCreationForm(forms.ModelForm, BaseForm):
+from django import forms
+from .models import CustomUser
+
+class CompanyCreationForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['username', 'email']  # Only required fields
+        fields = ['username', 'email']
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300'
+            }),
+        }
 
     def __init__(self, *args, **kwargs):
         super(CompanyCreationForm, self).__init__(*args, **kwargs)
         for field in self.fields.values():
-            field.required = True  # Make all fields required
+            field.required = True
+
             
             
 class CompanyUserCreationForm(forms.ModelForm, BaseForm):
