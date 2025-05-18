@@ -1,8 +1,7 @@
 {% extends 'htmls/user/main.html' %}
 {% block content %}
 {% load static %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <section class="bg-gradient-to-r from-indigo-100 to-purple-100 py-16 px-0">
     <div class="w-full mx-auto px-4">
       <div class="text-center mb-12">
@@ -95,45 +94,6 @@
       </div>
     </div>
 
-    <!-- Interactive Map -->
-    <div class="map-container">
-      <h2 class="text-3xl font-bold text-center mb-8">Our Projects Across the Region</h2>
-      <div id="map" style="height: 500px;"></div>
-      <script>
-        var map = L.map('map').setView([27.9533, 86.3358], 10); // Coordinates in decimal degrees and zoom level added
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        var marker = L.marker([27.66213048853746, 86.20554280688008]).addTo(map)
-          .bindPopup('<h3>Gurash park</h3><p>To enhance the tourism and preserve nature the park is built and it has enriched property to attarct the tourists.</p>')
-          .openPopup();
-        var marker = L.marker([27.69625757047094, 86.15003327305939]).addTo(map)
-          .bindPopup('<h3>Seti Devi H.S.S</h3><p>Provision for Higher education in the village.</p>')
-          .openPopup();
-        var marker = L.marker([27.694070849303586, 86.15225385923593]).addTo(map)
-          .bindPopup('<h3>Oda Health Care Center</h3><p>Health Facility for the people in local level.</p>')
-          .openPopup();
-
-
-        var startPoint = [27.692461752724185, 86.1477313639713];
-        var endPoint = [27.689715544737318, 86.1452298371935];
-        var startMarker = L.marker(startPoint).addTo(map)
-            .bindPopup('<h3>Start Point</h3><p>Beginning of the road construction.</p>')
-            .openPopup();
-        var endMarker = L.marker(endPoint).addTo(map)
-         .bindPopup('<h3>End Point</h3><p>End of the road construction.</p>')
-         .openPopup();
-         var roadLine = L.polyline([startPoint, endPoint], {
-            color: 'red',
-            weight: 5,
-            opacity: 0.8
-            }).addTo(map);
-            roadLine.bindPopup('<h3>Road Construction</h3><p>Construction of a new road between these points.</p>').openPopup();
-
-         
-      </script>
-    </div>
 
     <!-- Infographics and Data Visualizations -->
     <div class="infographics">

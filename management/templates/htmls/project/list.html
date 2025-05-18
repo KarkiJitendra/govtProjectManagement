@@ -2,7 +2,8 @@
 
 {% block content %}
 {% load static %}
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <header class="text-center my-3">
   <h1 class="text-3xl font-bold text-gray-800">My Projects</h1>
 </header>
@@ -17,7 +18,7 @@
     <a href="?status=Ongoing" class="px-4 py-2 rounded-full border {% if status_filter == 'Ongoing' %}bg-yellow-500 text-white{% else %}bg-white text-yellow-500 border-yellow-500{% endif %} hover:bg-yellow-100">Ongoing</a>
     <a href="?status=Completed" class="px-4 py-2 rounded-full border {% if status_filter == 'Completed' %}bg-purple-500 text-white{% else %}bg-white text-purple-500 border-purple-500{% endif %} hover:bg-purple-100">Completed</a>
     {% if user.role == 'Government' %}
-    <button class="px-4 py-2 rounded-full border bg-orange-500 text-orange-500 border-orange-500 hover:bg-orange-100" onclick="window.location.href='{% url 'create_project' %}'">Create New Project</button>
+    <button class="px-4 py-2 rounded-full border bg-orange-100 text-orange-500 border-orange-500 hover:bg-orange-200" onclick="window.location.href='{% url 'create_project' %}'">Create New Project</button>
     {% endif %}
   </div>
 
@@ -42,7 +43,7 @@
           <div class="mt-4 text-center">
             <a href="{% url 'Project-Edit' project.id %}" class="text-red-500 font-semibold hover:underline">Edit</a>
             <span class="mx-2 text-gray-400">|</span>
-            <a href="{% url 'Project-Delete' project.id %}" class="text-red-500 font-semibold hover:underline">Delete</a>
+            <a id="dele" href="{% url 'Project-Delete' project.id %}" class="text-red-500 font-semibold hover:underline">Delete</a>
           </div>
         {% endif %}
         </div>
@@ -52,6 +53,58 @@
     {% endif %}
   </div>
 </div>
+
+  <div class="map-container p-8" >
+      <h2 class="text-3xl font-bold text-center mb-8">Our Projects Across the Region</h2>
+      <div id="map" style="height: 500px;"></div>
+      <script>
+        var map = L.map('map').setView([27.9533, 86.3358], 10); // Coordinates in decimal degrees and zoom level added
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var marker = L.marker([27.66213048853746, 86.20554280688008]).addTo(map)
+          .bindPopup('<h3>Gurash park</h3><p>To enhance the tourism and preserve nature the park is built and it has enriched property to attarct the tourists.</p>')
+          .openPopup();
+        var marker = L.marker([27.69625757047094, 86.15003327305939]).addTo(map)
+          .bindPopup('<h3>Seti Devi H.S.S</h3><p>Provision for Higher education in the village.</p>')
+          .openPopup();
+        var marker = L.marker([27.694070849303586, 86.15225385923593]).addTo(map)
+          .bindPopup('<h3>Oda Health Care Center</h3><p>Health Facility for the people in local level.</p>')
+          .openPopup();
+
+
+        var startPoint = [27.692461752724185, 86.1477313639713];
+        var endPoint = [27.689715544737318, 86.1452298371935];
+        var startMarker = L.marker(startPoint).addTo(map)
+            .bindPopup('<h3>Start Point</h3><p>Beginning of the road construction.</p>')
+            .openPopup();
+        var endMarker = L.marker(endPoint).addTo(map)
+         .bindPopup('<h3>End Point</h3><p>End of the road construction.</p>')
+         .openPopup();
+         var roadLine = L.polyline([startPoint, endPoint], {
+            color: 'red',
+            weight: 5,
+            opacity: 0.8
+            }).addTo(map);
+            roadLine.bindPopup('<h3>Road Construction</h3><p>Construction of a new road between these points.</p>').openPopup();
+
+         
+      </script>
+    </div>
+
+<script>
+  // Attach confirmation to all delete links
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('a[href*="Project-Delete"]').forEach(function(link) {
+      link.addEventListener('click', function(event) {
+        if (!confirm("Are you sure you want to delete this project?")) {
+          event.preventDefault();
+        }
+      });
+    });
+  });
+</script>
 
 {% endblock content %}
 

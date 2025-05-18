@@ -5,6 +5,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator, RegexValidator
 from django.utils import timezone
+from management import validators
+from django.core.exceptions import ValidationError
+
 
 class BaseForm(forms.Form):
     def clean_name(self, value):

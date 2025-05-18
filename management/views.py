@@ -232,33 +232,7 @@ def logout_view(request):
     logout(request)
     return redirect('login')  # Redirect to login page after logout
 
-from django.db.models import Sum
-# def pie_chart_view(request):
-#     projects = Project.objects.all()
-#     plan = Project.objects.filter(status='Planning').count()
-#     ongoing = Project.objects.filter(status='Ongoing').count()
-#     completed = Project.objects.filter(status='Completed').count()
 
-#     labels = ["Planning", "Ongoing", "Completed"]
-#     data = [plan, ongoing, completed]
-
-#     bar_data = []
-#     for p in projects:
-#         bar_data.append({
-#             'name': p.title,
-#             'allocated': p.budget,
-#             'used': Transaction.objects.filter(project=p).aggregate(Sum('amount'))['amount__sum'] or 0
-#         })
-#     context = {
-#         'labels': json.dumps(labels),
-#         'data': json.dumps(data),
-#         'budget_data': bar_data,
-       
-#     }
-#     print(context)
-#     return render(request, 'htmls/user/dashboard.html', context)
-
-# views.py
 from django.db.models import Count, Sum
 
 @login_required
@@ -285,17 +259,6 @@ def chart_view(request):
 
 
 user = get_user_model()
-
-@login_required
-# views.py
-
-
-# def generate_temp_password(length=10):
-#     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))  # Default length is 10
-
-# views.py
-
-
 @login_required 
 
 def add_company(request):
@@ -432,13 +395,14 @@ def create_task(request, project_id):
             task = form.save(commit=False)  # don't save to DB yet
             task.project = project          # assign the project
             task.save()                     # now save it
-            return redirect('TaskList')     # change if needed to project-specific task list
+            return redirect('View-Task')     # change if needed to project-specific task list
         else:
             print(form.errors)
             return render(request, 'htmls/task/create.html', {'form': form})
     else:
         form = TaskForm()
         return render(request, 'htmls/task/create.html', {'form': form})
+
 
 
 @login_required
@@ -461,6 +425,13 @@ def tasklist(request):
 def taskview(request, id):
     data = Task.objects.get(id=id)
     return render(request, 'htmls/task/view.html', {'data':data})
+
+def project_task(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    tasks = Task.objects.filter(project=project)  # Access all tasks associated with the project
+    context = {'project': project, 'tasks': tasks}
+    return render(request, 'htmls/project/tasks.html', context)
+
 @login_required
 def taskdelete(request, id):
     data = Task.objects.get(id=id)
