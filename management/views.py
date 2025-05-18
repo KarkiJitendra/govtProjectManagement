@@ -142,29 +142,35 @@ def login_view(request):
 def change_password(request):
     if request.method == 'POST':
         mail = request.POST.get('email')
+        old_password = request.POST.get('old_password')
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
 
         # Validate email
 
-
-        # Validate new password
         try:
-            new_password = validate_password(new_password)
-        except ValidationError as e:
-            messages.error(request, e.message)
+            # Fetch the first user with the given email
+            user = get_user_model().objects.filter(email=mail).first()
+            if user is None:
+                raise get_user_model().DoesNotExist
+        except get_user_model().DoesNotExist:
+            messages.error(request, "No user found with this email.")
             return render(request, 'htmls/user/change_pass.html')
+
+        if not user.check_password(old_password):
+            messages.error(request, "Old password is incorrect.")
+            return render(request, 'htmls/user/change_pass.html')
+        
+        # Validate new password
+        # try:
+        #     new_password = validate_password(new_password)
+        # except ValidationError as e:
+        #     messages.error(request, e.message)
+        #     return render(request, 'htmls/user/change_pass.html')
 
         # Check if passwords match
         if new_password != confirm_password:
             messages.error(request, "Passwords do not match.")
-            return render(request, 'htmls/user/change_pass.html')
-
-        # Check if user exists
-        try:
-            user = get_user_model().objects.get(email=mail)
-        except ObjectDoesNotExist:
-            messages.error(request, "No user found with this email.")
             return render(request, 'htmls/user/change_pass.html')
 
         # Update user password
@@ -177,39 +183,6 @@ def change_password(request):
         return redirect('login')  # Redirect to login after reset
 
     return render(request, 'htmls/user/change_pass.html')
-# def forgotten_password(request):
-    
-#     if request.method == 'POST':
-#         email = request.POST.get('email')
-#         password = request.POST.get('password')
-
-#         try:
-#             validate_email(email)
-#             validate_password(password)
-#         except ValidationError as e:
-#             return render(request, 'forgotten_password.html', {'error': e.message})
-
-#         try:
-#             user = get_user_model().objects.filter(email=email)
-#         except ObjectDoesNotExist:
-#             messages.error(request, "No user found with this email.")
-#             return render(request, 'htmls/user/change_pass.html')
-
-#         user.set_password(password)
-#         user.save()
-
-#         send_mail(
-#             subject='Your Company Account Password Reset',
-#             message=f"Dear {user.username},\n\nYour password has been reset.\nNew password: {password}\nPlease log in and change your password immediately.",
-#             from_email=settings.EMAIL_HOST_USER,
-#             recipient_list=[email],
-#             fail_silently=False,
-#         )
-
-#         return redirect('login')
-#     else:
-#         return render(request, 'htmls/user/change_pass.html')
-
 
 
 @never_cache
@@ -274,14 +247,16 @@ def add_company(request):
             user.save()
 
             subject = 'Your Company Account Login Credentials'
-            text_part = f"Hello {user.username}, your password is {temp_password}"
-            html_part = f"<h3>Hello {user.username},</h3><p>Your password is <strong>{temp_password}</strong></p>"
+            message = f"Hello {user.username}, your password is {temp_password}"
+            receipient_list = [user.email]
+            # html_part = f"<h3>Hello {user.username},</h3><p>Your password is <strong>{temp_password}</strong></p>"
 
             try:
-                send_email(subject, text_part, html_part, user.email, user.username)
+                send_email(subject, message, receipient_list)
                 messages.success(request, "Email sent successfully.")
             except Exception as e:
                 messages.error(request, f"Failed to send email: {e}")
+                print(e)
             
             return redirect('change_password')
         else:
@@ -290,6 +265,42 @@ def add_company(request):
         form = CompanyCreationForm()
     
     return render(request, 'htmls/user/adproject.html', {'form': form})
+
+
+user = get_user_model()
+@login_required 
+def add_company_user(request):
+    if request.method == 'POST':
+        form = CompanyUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+
+            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+            user.set_password(temp_password)
+            user.force_password_change = True
+            user.role = "Company_Employee"
+            user.save()
+
+            subject = 'Your Company Account Login Credentials'
+            message = f"Hello {user.username}, your password is {temp_password}"
+            receipient_list = [user.email]
+            # html_part = f"<h3>Hello {user.username},</h3><p>Your password is <strong>{temp_password}</strong></p>"
+
+            try:
+                send_email(subject, message, receipient_list)
+                messages.success(request, "Email sent successfully.")
+            except Exception as e:
+                messages.error(request, f"Failed to send email: {e}")
+                print(e)
+            
+            return redirect('change_password')
+        else:
+            messages.error(request, "Error adding company. Please check the form.")
+    else:
+        form = CompanyCreationForm()
+    
+    return render(request, 'htmls/user/adproject.html', {'form': form})
+
 
 #################--ProjectVIews---############
 @login_required

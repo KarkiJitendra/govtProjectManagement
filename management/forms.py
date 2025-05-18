@@ -214,6 +214,18 @@ class CompanyCreationForm(forms.ModelForm):
         for field in self.fields.values():
             field.required = True
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if CustomUser.objects.filter(email=email).exists():
+            raise ValidationError("This email address is already in use. Please supply a different email address.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user
             
             
 class CompanyUserCreationForm(forms.ModelForm, BaseForm):
@@ -224,7 +236,20 @@ class CompanyUserCreationForm(forms.ModelForm, BaseForm):
     def __init__(self, *args, **kwargs):
         super(CompanyUserCreationForm, self).__init__(*args, **kwargs)
         for field in self.fields.values():
-            field.required = True  # Make all fields required            
+            field.required = True  # Make all fields required  
+            
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if CustomUser.objects.filter(email=email).exists():
+            raise ValidationError("This email address is already in use. Please supply a different email address.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user          
 
 #################--userVIews---############
 

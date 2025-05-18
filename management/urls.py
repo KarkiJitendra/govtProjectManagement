@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import login_view, signin_view, dashboard_view, createproject, projectlist, projectedit, projectdelete, \
     projectview, create_task, tasklist, taskview, taskedit, taskdelete, viewtask, transaction_list, createtransaction,\
-    edittransaction, deletetransaction, listtransaction, submit_feedback, add_company, logout_view, change_password, projectTransaction, about, chart_view
+    edittransaction, deletetransaction, listtransaction, submit_feedback, add_company, logout_view, change_password, projectTransaction, about, chart_view, add_company_user
 
 
 urlpatterns = [
@@ -10,6 +10,7 @@ urlpatterns = [
     # path('dashboard/', dashboard_view, name='dashboard'),
     path('logout/', logout_view, name='logout'),
     path('projectuser/',add_company, name='add_company'), 
+    path('projectemployee/',add_company_user, name='add_company_user'), 
     # path('dashboard/', pie_chart_view, name='dashboard'),
     path('change_password/', change_password, name='change_password'),
     path('dashboard/', chart_view, name='dashboard'),
