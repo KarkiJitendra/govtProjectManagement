@@ -58,26 +58,55 @@ class TaskForm(forms.ModelForm, BaseForm):
             'priority': forms.Select(attrs={
                 'class': 'w-full border border-blue-300 rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200'
             }),
-            'assigned_to': forms.Select(attrs={
-                'class': 'w-full border border-blue-300 rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200'
+            'assigned_to': forms.CheckboxSelectMultiple(attrs={
+                'class': 'space-y-2 px-2 py-1 bg-blue-50 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400'
             }),
             'project': forms.Select(attrs={
                 'class': 'w-full border border-blue-300 rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200'
             }),
         }
 
-# class ProjectForm(forms.ModelForm):
-#     team_members= forms.ModelMultipleChoiceField(
-#         queryset=CustomUser.objects.all(),
-#         widget=forms.SelectMultiple,  # Or use forms.SelectMultiple for a dropdown
-#         required=True
-#     )
-#     class Meta():
-#         model = Project
-#         fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['project'].queryset = Project.objects.filter(status__in=['Planning','Ongoing'])
+        # Filter assigned_to field to only show Company_Employee users
+        self.fields['assigned_to'].queryset = CustomUser.objects.filter(role='Company_Employee')
+
+        
+    def clean_title(self):
+        title = self.cleaned_data['title']
+        if not title.strip():
+            raise forms.ValidationError('Title cannot be empty.')
+        return title
+    
+    def clean_description(self):
+        description = self.cleaned_data['description']
+        if not description.strip():
+            raise forms.ValidationError('Description cannot be empty.')
+        return description
+    
+    def clean_due_date(self):
+        due_date = self.cleaned_data.get('due_date')
+        if due_date and due_date < timezone.now().date():
+            raise forms.ValidationError('Due date cannot be in the past.')
+        return due_date
+    def clean_priority(self):
+        priority = self.cleaned_data['priority']
+        if priority not in ['Low', 'Medium', 'High']:
+            raise forms.ValidationError('Invalid priority level.')
+        return priority
+
+    
+    def clean_status(self):
+        status = self.cleaned_data['status']
+        if status not in ['Pending', 'In Progress', 'Completed']:
+            raise forms.ValidationError('Invalid status.')
+        return status
 
 
-class ProjectForm(forms.ModelForm, BaseForm):
+
+class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
         exclude = ['start_date', 'project']
@@ -88,9 +117,28 @@ class ProjectForm(forms.ModelForm, BaseForm):
             'end_date': forms.DateInput(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400', 'type': 'date'}),
             'owner': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400'}),
             'budget': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400'}),
-            'team_members': forms.SelectMultiple(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400'}),
+            'team_members': forms.CheckboxSelectMultiple(attrs={'class': 'space-y-2 px-2 py-1 bg-blue-50 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400'}),
             'image': forms.ClearableFileInput(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Filter owner field to only show Company_head users
+        self.fields['owner'].queryset = CustomUser.objects.filter(role='Company_Head')
+
+        # If 'owner' is in the data (form submission), use it to filter team_members
+        # if 'owner' in self.data:
+        #     try:
+        #         owner_id = int(self.data.get('owner'))
+        #         self.fields['team_members'].queryset = CustomUser.objects.filter(role='Company_Employee', added_by_id=owner_id)
+        #     except (ValueError, TypeError):
+        #         self.fields['team_members'].queryset = CustomUser.objects.none()
+        # elif self.instance.pk:
+        #     # In case of editing existing object
+        #     owner = self.instance.owner
+        self.fields['team_members'].queryset = CustomUser.objects.filter(role='Company_Employee')
+       
 
     def clean_title(self):
         title = self.cleaned_data['title']
@@ -110,24 +158,21 @@ class ProjectForm(forms.ModelForm, BaseForm):
             raise forms.ValidationError('Budget must be greater than zero.')
         return budget
 
-def clean_end_date(self):
-    end_date = self.cleaned_data.get('end_date')
-    
-    # Get the start_date from the instance if it exists, otherwise use the current date
-    if self.instance.pk:
-        start_date = self.instance.start_date
-    else:
-        start_date = timezone.now().date()  # Set to current date
+    def clean_end_date(self):
+        end_date = self.cleaned_data.get('end_date')
 
-    # Ensure start_date is not None
-    if start_date is None:
-        raise ValidationError('Start date must be set before setting the end date.')
+        # Use the instance's start_date or current date if new
+        start_date = self.instance.start_date if self.instance.pk else timezone.now().date()
 
-    # Validate that end_date is after start_date
-    if end_date and start_date and end_date < start_date:
-        raise ValidationError('End date must be after the start date.')
+        if start_date is None:
+            raise ValidationError('Start date must be set before setting the end date.')
 
-    return end_date
+        if end_date and end_date < start_date:
+            raise ValidationError('End date must be after the start date.')
+
+        return end_date
+
+
 class Signin(forms.ModelForm, BaseForm):
     password1 = forms.CharField(widget=forms.PasswordInput)
     password2 = forms.CharField(widget=forms.PasswordInput)
@@ -209,10 +254,10 @@ class CompanyCreationForm(forms.ModelForm):
             }),
         }
 
+
     def __init__(self, *args, **kwargs):
-        super(CompanyCreationForm, self).__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.required = True
+        self.added_by = kwargs.pop('added_by', None)  # <- Accept from view
+        super().__init__(*args, **kwargs)
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -233,10 +278,10 @@ class CompanyUserCreationForm(forms.ModelForm, BaseForm):
         model = CustomUser
         fields = ['username', 'email']  # Only required fields
 
+
     def __init__(self, *args, **kwargs):
-        super(CompanyUserCreationForm, self).__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.required = True  # Make all fields required  
+        self.added_by = kwargs.pop('added_by', None)  # <- Accept from view
+        super().__init__(*args, **kwargs) 
             
     def clean_email(self):
         email = self.cleaned_data.get('email')

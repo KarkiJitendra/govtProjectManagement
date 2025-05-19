@@ -87,7 +87,15 @@ def signin_view(request):
                 # You can add a message if you use messages framework
                 messages.warning(request, "Company users cannot sign up directly. Please contact an admin.")
                 return redirect('login')
-        
+            email= form.cleaned_data['email']
+            if email:
+                try:
+                    # Check if the email already exists
+                    existing_user = CustomUser.objects.get(email=email)
+                    messages.error(request, "Email already exists. Please use a different email.")
+                    return redirect('signup')
+                except CustomUser.DoesNotExist:
+                    pass
             user = form.save(commit=False)
             user.role = role
             user.set_password(form.cleaned_data['password1'])  # Hash the password
@@ -236,7 +244,7 @@ user = get_user_model()
 
 def add_company(request):
     if request.method == 'POST':
-        form = CompanyCreationForm(request.POST)
+        form = CompanyCreationForm(request.POST, added_by=request.user)
         if form.is_valid():
             user = form.save(commit=False)
 
@@ -262,7 +270,7 @@ def add_company(request):
         else:
             messages.error(request, "Error adding company. Please check the form.")
     else:
-        form = CompanyCreationForm()
+        form = CompanyCreationForm(added_by=request.user)
     
     return render(request, 'htmls/user/adproject.html', {'form': form})
 
@@ -271,7 +279,7 @@ user = get_user_model()
 @login_required 
 def add_company_user(request):
     if request.method == 'POST':
-        form = CompanyUserCreationForm(request.POST)
+        form = CompanyUserCreationForm(request.POST, added_by=request.user)
         if form.is_valid():
             user = form.save(commit=False)
 
@@ -297,7 +305,7 @@ def add_company_user(request):
         else:
             messages.error(request, "Error adding company. Please check the form.")
     else:
-        form = CompanyCreationForm()
+        form = CompanyCreationForm(added_by=request.user)
     
     return render(request, 'htmls/user/adproject.html', {'form': form})
 
@@ -371,7 +379,28 @@ def viewtask(request, project_id):
     except ValueError:
         # Handle the case where project_id cannot be converted to an integer
         return render(request, 'error.html', {'message': 'Invalid project ID'})
-
+    
+def projectask(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    tasks = Task.objects.filter(project=project)  # Access all tasks associated with the project
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.project = project  # Assign the project
+            task.save()
+            return redirect('View-Task', project_id=project_id)  # Redirect to the task list for the project
+        else:
+            print(form.errors)
+            print(form.cleaned_data.get('assigned_to', [])) 
+            return render(request, 'htmls/task/create.html', {'form': form, 'project': project })
+    else:
+        # Pre-fill the form with initial data if the request is a GET request
+        form = TaskForm(initial={'project': project , 'user': request.user})
+        return render(request, 'htmls/task/create.html', {'form': form, 'project': project})
+    
+        
+    
 @login_required
 def projectTransaction(request, project_id):
     project = get_object_or_404(Project, id=project_id)

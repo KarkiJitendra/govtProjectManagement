@@ -47,7 +47,9 @@
     </div>
 
     <div class="mt-6 flex space-x-4">
+     {% if user.role == 'Company_Head' %}
         <a href="{% url 'create_transaction' %}" class="bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600">Add New Transaction</a>
+        {% endif %}
         <a href="{% url 'ProjectList' %}" class="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600">Back to Projects</a>
     </div>
 </div>

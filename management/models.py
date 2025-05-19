@@ -13,8 +13,13 @@ class CustomUser(AbstractUser):
         ]
         role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='Public')
         must_change_password = models.BooleanField(default=False)
-
-
+        added_by = models.ForeignKey(
+            settings.AUTH_USER_MODEL,
+            on_delete=models.SET_NULL,
+            null=True,
+            blank=True,
+            related_name='added_users'
+        )
 class Project(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -44,7 +49,7 @@ class Task(models.Model):
     due_date = models.DateField()
     status = models.CharField(max_length=50, choices=[('Pending', 'Pending'), ('In Progress', 'In Progress'),
                                                       ('Completed', 'Completed')])
-    assigned_to = models.ForeignKey(CustomUser, related_name='tasks', on_delete=models.CASCADE)
+    assigned_to = models.ManyToManyField(CustomUser, related_name='assigned_tasks')
     project = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='tasks_for_project')
     priority = models.CharField(max_length=50, choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')])
 

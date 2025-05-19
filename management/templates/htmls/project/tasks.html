@@ -25,10 +25,13 @@
     </div>
 
     <!-- Assign Task Button -->
+     {% if user.role == 'Company_Head' %}
+
     <div class="text-right">
-        <a href="{% url 'Create_Task' project.id %}" class="inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md shadow">
+        <a href="{% url 'project-task' project.id %}" class="inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md shadow">
             Assign a Task
         </a>
     </div>
+    {% endif %}
 </div>
 {% endblock %}

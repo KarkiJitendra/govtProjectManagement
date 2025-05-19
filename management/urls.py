@@ -1,8 +1,7 @@
 from django.urls import path
 from .views import login_view, signin_view, dashboard_view, createproject, projectlist, projectedit, projectdelete, \
     projectview, create_task, tasklist, taskview, taskedit, taskdelete, viewtask, transaction_list, createtransaction,\
-    edittransaction, deletetransaction, listtransaction, submit_feedback, add_company, logout_view, change_password, projectTransaction, about, chart_view, add_company_user
-
+    edittransaction, deletetransaction, listtransaction, submit_feedback, add_company, logout_view, change_password, projectTransaction, about, chart_view, add_company_user, projectask
 
 urlpatterns = [
     path('login/', login_view, name='login'),
@@ -23,6 +22,7 @@ urlpatterns = [
     path('project/view/<id>', projectview, name='Project-View'),
     path('project/view/task/<int:project_id>/', viewtask, name='View-Task'),
     path('project/view/transaction /<int:project_id>/', projectTransaction, name='project-transaction'),
+    path('project/create/task/<int:project_id>/', projectask, name='project-task'),
     
 
     #task urls
