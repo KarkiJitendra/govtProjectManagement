@@ -29,7 +29,7 @@
                             <td class="px-4 py-3">{{ transaction.transaction_type }}</td>
                             <td class="px-4 py-3">{{ transaction.description }}</td>
                             <td class="px-4 py-3">{{ transaction.date|date:"Y-m-d H:i" }}</td>
-                            {% if user.role == 'Company_Head' %}
+                            {% if  user == project.owner %}
                             <td class="px-4 py-3 space-x-2">
                                 <a href="{% url 'edit_transaction' transaction.id %}" class="inline-block bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm">Edit</a>
                                 <a href="{% url 'delete_transaction' transaction.id %}" class="inline-block bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700 text-sm">Delete</a>
@@ -48,7 +48,7 @@
 
     <div class="mt-6 flex justify-between">
         <div class="flex space-x-4">
-            {% if user.role == 'Company_Head' %}
+            {% if user == project.owner %}
             <a href="{% url 'project-transaction' project.id %}" class="bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600">Add New Transaction</a>
             {% endif %}
             <a href="{% url 'ProjectList' %}" class="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600">Back to Projects</a>

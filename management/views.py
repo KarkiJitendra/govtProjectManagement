@@ -599,7 +599,7 @@ def submit_feedback(request):
     else:
         form = FeedbackForm()
 
-    return render(request, 'htmls/feedback/sendmail.html', {'form': form})
+    return render(request, 'htmls/feedback/contact.html', {'form': form})
 
    
 
