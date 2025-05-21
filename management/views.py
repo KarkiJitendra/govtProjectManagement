@@ -612,5 +612,5 @@ def submit_feedback(request):
     
 def about(request):
     number = Project.objects.filter(status='Completed').count()
-    budget = Transaction.objects.aggregate(Sum('amount'))['amount__sum'] or 0
+    budget = Transaction.objects.filter(project__status='completed').aggregate(Sum('amount'))['amount__sum'] or 0    
     return render(request, 'htmls/feedback/about.html', {'number': number, 'budget': budget})

@@ -1,80 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    {% load static %}
-    <script src="https://cdn.tailwindcss.com"></script> <!-- Tailwind CDN -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  {% load static %}
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="flex flex-col min-h-screen font-sans bg-gray-100 text-gray-800">
+<body class="flex flex-col min-h-screen font-sans bg-gradient-to-br from-gray-50 to-gray-200 text-gray-800">
 
-    <!-- Header -->
-    <header class="bg-gray-800 text-white  py-2 px-4">
-        <div class="flex justify-between items-center max-w-7.4xl mx-auto px-4">
-            <div class=" w-22 h-16 mr-4">
-                <img src="{% static 'images/newlopoy.png' %}"  class="w-full h-full object-cover rounded-lg" alt="Logo">
-            </div>
-            <div class="px-1 text-2xl font-bold">
-                Gaurishankar-2 <em>Projects</em>
-            </div>
-            <ul class="flex space-x-4">
-                <li><a href="{% url 'dashboard' %}" class="px-4 py-2 hover:bg-gray-700 rounded">Home</a></li>
-                <li><a href="{% url 'ProjectList' %}" class="px-4 py-2 hover:bg-gray-700 rounded">Projects</a></li>
-                <li><a href="{% url 'about' %}" class="px-4 py-2 hover:bg-gray-700 rounded">About</a></li>
-                <li><a href="{% url 'thank-you' %}" class="px-4 py-2 hover:bg-gray-700 rounded">Contact</a></li>
-            </ul>
-            <div  class="flex items-center space-x-2 ml-4  px-4 py-2">
-                <span class="text-x bg-white text-gray-600 shadow rounded-full px-4 py-2" >{{ user.username }}</span>
-                <a href="{% url 'logout' %}" class="text-x text-red-600 hover:text-red-1000 bg-white text-gray-600 shadow rounded-full px-4 py-2">Logout</a>
-            </div>
-            <!-- <button onclick="toggleMode()">Toggle Dark Mode</button> -->
-            
+  <!-- Header -->
+  <header class="bg-gray-900 text-white shadow">
+    <div class="flex justify-between items-center max-w-7xl mx-auto px-6 py-3">
+      <!-- Logo -->
+      <div class="w-24 h-16">
+        <img src="{% static 'images/newlopoy.png' %}" class="w-full h-full object-cover rounded-lg shadow" alt="Logo" />
+      </div>
 
-            
+      <!-- Title -->
+      <div class="text-2xl font-bold tracking-wide">
+        Gaurishankar-2 <em class="text-indigo-400">Projects</em>
+      </div>
+
+      <!-- Navigation -->
+      <ul class="flex space-x-4 text-sm font-medium">
+        <li><a href="{% url 'dashboard' %}" class="px-4 py-2 hover:bg-indigo-600 hover:text-white rounded transition">Home</a></li>
+        <li><a href="{% url 'ProjectList' %}" class="px-4 py-2 hover:bg-indigo-600 hover:text-white rounded transition">Projects</a></li>
+        <li><a href="{% url 'about' %}" class="px-4 py-2 hover:bg-indigo-600 hover:text-white rounded transition">About</a></li>
+        <li><a href="{% url 'thank-you' %}" class="px-4 py-2 hover:bg-indigo-600 hover:text-white rounded transition">Contact</a></li>
+      </ul>
+
+      <!-- User and Logout -->
+      <div class="flex items-center space-x-3 ml-4">
+        <span class="bg-white text-gray-700 px-4 py-1 rounded-full text-sm font-medium shadow">{{ user.username }}</span>
+        <a href="{% url 'logout' %}">
+          <img src="{% static 'images/log.jpg' %}" alt="Logout" class="w-11 h-11 rounded-full shadow hover:scale-105 transition-transform duration-200" />
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow py-10 px-6">
+    {% block content %}
+    <h1 class="text-4xl font-bold text-center mb-12 text-indigo-700">Project Dashboard</h1>
+
+    <div class="flex flex-wrap justify-center gap-8">
+      <!-- Project Card -->
+      <div class="w-full sm:w-1/2 md:w-1/3 max-w-sm transition transform hover:scale-105">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 flex flex-col h-full overflow-hidden">
+          <div class="p-6 flex-grow">
+            <h5 class="text-xl font-semibold mb-2 text-gray-800">Project Name</h5>
+            <p class="text-sm mb-1 text-gray-600"><strong>Owner:</strong> Owner Name</p>
+            <p class="text-sm mb-1 text-gray-600"><strong>Status:</strong> In Progress</p>
+            <p class="text-sm text-gray-700"><strong>Description:</strong> A brief project description goes here.</p>
+          </div>
+          <div class="bg-gray-100 p-4 text-center">
+            <button onclick="viewDetails()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-800 transition">View Details</button>
+          </div>
         </div>
-    </header>
+      </div>
+      <!-- Additional cards can be added similarly -->
+    </div>
+    {% endblock %}
+  </main>
 
-    <!-- Main Content -->
-    <!-- <main class="bg-gradient-to-br from-blue-500 to-green-400 flex-grow bg-blue-50 py-4 px-1"> -->
-    <main class="bg-indigo-100 flex-grow bg-blue-50 py-4 px-1">
-        
-        {% block content %}
-        <h1 class="text-3xl text-center font-semibold mb-10">Project Dashboard</h1>
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white text-center py-4 mt-auto shadow-inner">
+    &copy; 2025 Project Dashboard. All Rights Reserved.
+  </footer>
 
-        <div class="flex flex-wrap justify-center gap-6">
-            <!-- Project Card -->
-            <div class="w-full sm:w-1/2 md:w-1/3 max-w-sm">
-                <div class="bg-white border border-gray-200 rounded-lg shadow flex flex-col h-full">
-                    <div class="p-4 flex-grow">
-                        <h5 class="text-xl font-semibold mb-2">Project Name</h5>
-                        <p class="text-sm mb-1"><strong>Owner:</strong> Owner Name</p>
-                        <p class="text-sm mb-1"><strong>Status:</strong> In Progress</p>
-                        <p class="text-sm"><strong>Description:</strong> A brief project description goes here.</p>
-                    </div>
-                    <div class="bg-gray-100 p-4 text-center">
-                        <button onclick="viewDetails()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-800 transition">View Details</button>
-                    </div>
-                </div>
-            </div>
-            <!-- Additional cards can be added here -->
-        </div>
-        {% endblock %}
-    </main>
+  <!-- Scripts -->
+  <script>
+    function viewDetails() {
+      alert("Details button clicked!");
+    }
+    function toggleMode() {
+      document.getElementById("mainBody").classList.toggle("dark-mode");
+    }
+  </script>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white text-center py-4">
-        &copy; 2025 Project Dashboard. All Rights Reserved.
-    </footer>
-
-    <script>
-        function viewDetails() {
-            alert("Details button clicked!");
-        }
-
-                    function toggleMode() {
-                      document.getElementById("mainBody").classList.toggle("dark-mode");
-                    }
-                  </script>
 </body>
 </html>
