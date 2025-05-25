@@ -1,9 +1,7 @@
 from lib2to3.fixes.fix_input import context
-import json
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRedirect
 from django.template.context_processors import request
 from django.db import transaction
-
 from .models import CustomUser, Project, Task, Transaction
 from .forms import ProjectForm, TaskForm, TransactionForm, FeedbackForm, Signin_User, CompanyCreationForm, CompanyUserCreationForm
 from django.contrib.auth import authenticate, login, logout
@@ -17,7 +15,6 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
-#################--userVIews---############
 from .forms import Signin
 from django.contrib import messages
 from django.db.models import Count
@@ -73,6 +70,7 @@ def validate_amount(value):
 
 #################--UserViews---############
 
+
 def signin_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -82,15 +80,12 @@ def signin_view(request):
         if form.is_valid():
             role = form.cleaned_data['role']
 
-            # Prevent signup for role 'Company'
             if role == 'Company_Head' or role == 'Company_Employee':
-                # You can add a message if you use messages framework
                 messages.warning(request, "Company users cannot sign up directly. Please contact an admin.")
                 return redirect('login')
             email= form.cleaned_data['email']
             if email:
                 try:
-                    # Check if the email already exists
                     existing_user = CustomUser.objects.get(email=email)
                     messages.error(request, "Email already exists. Please use a different email.")
                     return redirect('signup')
@@ -98,10 +93,9 @@ def signin_view(request):
                     pass
             user = form.save(commit=False)
             user.role = role
-            user.set_password(form.cleaned_data['password1'])  # Hash the password
+            user.set_password(form.cleaned_data['password1'])  
             user.save()
 
-            # Authenticate and log in the user
             raw_password = form.cleaned_data['password1']
             user = authenticate(request, username=user.username, password=raw_password)
             if user is not None:
@@ -109,8 +103,7 @@ def signin_view(request):
                 return redirect('dashboard')
 
         else:
-            print(form.errors)  # Debug: Check validation errors
-
+            print(form.errors) 
     else:
         form = Signin()
 
@@ -121,25 +114,22 @@ def signin_view(request):
 
 def login_view(request):
     if request.method == 'POST':
-        # Retrieve username and password from POST data
         username = request.POST.get('username')
-        password = request.POST.get('password')  # Ensure field name matches your form
+        password = request.POST.get('password')  
 
         # Authenticate the user
         user = authenticate(request, username=username, password=password)
         if user is not None:
             if user.must_change_password:
                 login(request, user)
-                return redirect('force_password_change')  # name of the view to force password change
+                return redirect('force_password_change') 
             else:
                 login(request, user)
-                return redirect('dashboard')  # or role-based dashboard
+                return redirect('dashboard')  
         else:
-            # Add error message for invalid credentials
             messages.error(request, 'Invalid username or password.')
             return render(request, 'htmls/user/login.html')
 
-    # Render login form for GET request
     return render(request, 'htmls/user/login.html')
 
 
@@ -154,10 +144,7 @@ def change_password(request):
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
 
-        # Validate email
-
         try:
-            # Fetch the first user with the given email
             user = get_user_model().objects.filter(email=mail).first()
             if user is None:
                 raise get_user_model().DoesNotExist
@@ -169,14 +156,6 @@ def change_password(request):
             messages.error(request, "Old password is incorrect.")
             return render(request, 'htmls/user/change_pass.html')
         
-        # Validate new password
-        # try:
-        #     new_password = validate_password(new_password)
-        # except ValidationError as e:
-        #     messages.error(request, e.message)
-        #     return render(request, 'htmls/user/change_pass.html')
-
-        # Check if passwords match
         if new_password != confirm_password:
             messages.error(request, "Passwords do not match.")
             return render(request, 'htmls/user/change_pass.html')
@@ -188,8 +167,7 @@ def change_password(request):
         user.save()
 
         messages.add_message(request, messages.SUCCESS, 'Your password has been successfully reset.', extra_tags='password_reset')
-        return redirect('login')  # Redirect to login after reset
-
+        return redirect('login')  
     return render(request, 'htmls/user/change_pass.html')
 
 
@@ -209,19 +187,15 @@ def dashboard_view(request):
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def logout_view(request):
-    # Handle user logout
     logout(request)
-    return redirect('login')  # Redirect to login page after logout
-
+    return redirect('login')  
 
 from django.db.models import Count, Sum
 
 @login_required
 def chart_view(request):
-    # Fetch project status data for the Pie Chart
     status_data = Project.objects.values('status').annotate(count=Count('id'))
 
-    # Fetch budget data for the Bar Chart
     projects = Project.objects.filter(status__in=['Ongoing', 'Planning'])    
     bar_data = []
     for p in projects:
@@ -257,7 +231,6 @@ def add_company(request):
             subject = 'Your Company Account Login Credentials'
             message = f"Hello {user.username}, your password is {temp_password}"
             receipient_list = [user.email]
-            # html_part = f"<h3>Hello {user.username},</h3><p>Your password is <strong>{temp_password}</strong></p>"
 
             try:
                 send_email(subject, message, receipient_list)
@@ -292,7 +265,6 @@ def add_company_user(request):
             subject = 'Your Company Account Login Credentials'
             message = f"Hello {user.username}, your password is {temp_password}"
             receipient_list = [user.email]
-            # html_part = f"<h3>Hello {user.username},</h3><p>Your password is <strong>{temp_password}</strong></p>"
 
             try:
                 send_email(subject, message, receipient_list)
@@ -314,10 +286,10 @@ def add_company_user(request):
 @login_required
 def createproject(request):
     if request.method == 'POST':
-        form = ProjectForm(request.POST, request.FILES)  # Include request.FILES for file uploads
+        form = ProjectForm(request.POST, request.FILES) 
         if form.is_valid():
             form.save()
-            return redirect('ProjectList')  # Redirect to a list or details page after successful creation
+            return redirect('ProjectList')  
         else:
             return render(request, 'htmls/project/create.html', {'form': form})  # Show form with errors
     else:
@@ -326,10 +298,6 @@ def createproject(request):
 
 @   login_required
 def projectlist(request):
-    # data = Project.objects.all()
-    # context = {'data':data}
-    # return render(request, 'list.html', context)
-
     status_filter = request.GET.get('status', 'all')
     if status_filter == 'all':
         data = Project.objects.all()
@@ -342,9 +310,8 @@ def projectlist(request):
 
 def projectedit(request, id):
     data = get_object_or_404(Project, id=id)
-    # form = ProjectForm(instance=data)
     if request.method == 'POST':
-        form = ProjectForm(request.POST, instance=data, files=request.FILES)  # Include request.FILES for file uploads
+        form = ProjectForm(request.POST, instance=data, files=request.FILES) 
         if form.is_valid():
             form.save()
             data = Project.objects.get(id=id)
@@ -372,30 +339,28 @@ def viewtask(request, project_id):
         # Convert the project_id string to an integer
         project_id = int(project_id)
         project = get_object_or_404(Project, id=project_id)
-        tasks = Task.objects.filter(project=project)  # Access all tasks associated with the project
+        tasks = Task.objects.filter(project=project) 
 
         context = {'project': project, 'tasks': tasks}
         return render(request, 'htmls/project/tasks.html', context)
     except ValueError:
-        # Handle the case where project_id cannot be converted to an integer
         return render(request, 'error.html', {'message': 'Invalid project ID'})
     
 def projectask(request, project_id):
     project = get_object_or_404(Project, id=project_id)
-    tasks = Task.objects.filter(project=project)  # Access all tasks associated with the project
+    tasks = Task.objects.filter(project=project)  
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
             task = form.save(commit=False)
-            task.project = project  # Assign the project
+            task.project = project  
             task.save()
-            return redirect('View-Task', project_id=project_id)  # Redirect to the task list for the project
+            return redirect('View-Task', project_id=project_id) 
         else:
             print(form.errors)
             print(form.cleaned_data.get('assigned_to', [])) 
             return render(request, 'htmls/task/create.html', {'form': form, 'project': project })
     else:
-        # Pre-fill the form with initial data if the request is a GET request
         form = TaskForm(initial={'project': project , 'user': request.user})
         return render(request, 'htmls/task/create.html', {'form': form, 'project': project})
     
@@ -411,15 +376,13 @@ def projectTransaction(request, project_id):
         form = TransactionForm(request.POST)
         if form.is_valid():
             transaction = form.save(commit=False)
-            transaction.project = project  # Assign the project
-            transaction.user = request.user  # Assign the current user
+            transaction.project = project
+            transaction.user = request.user  
             transaction.save()
-            return redirect('transaction_list', project_id=project_id)  # Redirect to the transaction list for the project
+            return redirect('transaction_list', project_id=project_id)  
         else:
-            print(form.errors)  # Print form errors for debugging
             return render(request, 'htmls/transaction/projectran.html', {'form': form, 'project': project, 'remaining_budget': remaining_budget})
     else:
-        # Pre-fill the form with initial data if the request is a GET request
         form = TransactionForm(initial={'project': project, 'user': request.user})
         return render(request, 'htmls/transaction/projectran.html', {'form': form, 'project': project, 'remaining_budget': remaining_budget})
 
@@ -453,11 +416,6 @@ def tasklist(request):
 
     else:
         data = Task.objects.filter(status=status_filter)
-    # status_filter = request.GET.get('status', 'all')  # Get the category from the request
-    # if status_filter:
-    #     tasks = Task.objects.filter(status=status_filter)  
-    # else:
-    #     tasks = Task.objects.all()
         
     return render(request, 'htmls/task/list.html', {'data':data})
 
@@ -499,7 +457,7 @@ def taskedit(request, id):
 
 
 # #################--TransactionViews---############
-# @login_required
+@login_required
 def createtransaction(request):
     if request.method == 'POST':
         form = TransactionForm(request.POST)
@@ -543,7 +501,6 @@ def transaction_list(request, project_id):
         'project': project,
         'remaining_balance': remaining_balance
     })
-    #to make the transaction atomic i.e no roll back issue
     response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     response['Pragma'] = 'no-cache'
     return response
@@ -555,11 +512,9 @@ def listtransaction(request):
 
 def deletetransaction(request,id):
     transaction = get_object_or_404(Transaction, id=id)
-    project_id = transaction.project.id  # Save the project ID before deleting the transaction
+    project_id = transaction.project.id  
     transaction.delete()
     return HttpResponseRedirect(f'/projects/{project_id}/transactions/')
-
-    # Redirect back to the project's transaction list page
 
 #################--FeedbackViews---############
 
@@ -573,41 +528,10 @@ def submit_feedback(request):
                 feedback.user = request.user
             feedback.save()
 
-            # # Send email notification
-            # subject = f"New Feedback on {feedback.get_feedback_type_display()}"
-            # message = (
-            #     f"Feedback Details:\n\n"
-            #     f"User: {feedback.user or 'Anonymous'}\n"
-            #     f"Type: {feedback.get_feedback_type_display()}\n"
-            #     f"Project: {feedback.project.title if feedback.project else 'N/A'}\n"
-            #     f"Task: {feedback.task.title if feedback.task else 'N/A'}\n"
-            #     f"Rating: {feedback.get_rating_display() if feedback.rating else 'N/A'}\n"
-            #     f"Feedback: {feedback.feedback_text}\n"
-            #     f"Date: {feedback.date_submitted}"
-            # )
-            # try:
-            #     send_mail(
-            #         subject=subject,
-            #         message=message,
-            #         from_email=settings.EMAIL_HOST_USER,
-            #         recipient_list=['jitendrakarki988036@gmail.com'],  # Change this to the recipient's email"],
-            #         fail_silently=False,
-            #     )
-            #     return JsonResponse({'status': 'success', 'message': 'Email sent successfully!'})
-            # except Exception as e:
-            #     return JsonResponse({'status': 'error', 'message': str(e)})
     else:
         form = FeedbackForm()
 
     return render(request, 'htmls/feedback/contact.html', {'form': form})
-
-   
-
-
-    #         return render(request, 'htmls/feedback/thanku.html')  # Redirect to a thank-you page
-    # else:
-    #     form = FeedbackForm()
-    # return render(request, 'htmls/feedback/contact.html', {'form': form})
     
     
 def about(request):
