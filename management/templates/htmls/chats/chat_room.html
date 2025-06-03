@@ -1,0 +1,121 @@
+{% extends "htmls/project/main.html" %}
+
+{% block title %}Chat with {{ other_user_username }}{% endblock %}
+
+{% block content %}
+<h2 class="text-xl font-semibold text-gray-800 mb-4">Chat with {{ other_user_username }}</h2>
+
+<div id="chat-log" class="h-[400px] w-full border border-gray-300 overflow-y-scroll p-4 mb-4 flex flex-col space-y-2 rounded-lg bg-white shadow-inner">
+    {% for msg in previous_messages %}
+        <div class="chat-message {% if msg.sender.username == current_user_username %}own-message{% else %}other-message{% endif %} px-4 py-2 rounded-2xl max-w-[70%] break-words shadow-md 
+            {% if msg.sender.username == current_user_username %}bg-green-100 self-end text-right ml-auto{% else %}bg-gray-100 self-start text-left mr-auto{% endif %}">
+            <span class="sender-name block text-sm font-semibold 
+                {% if msg.sender.username == current_user_username %}text-green-700{% else %}text-gray-700{% endif %}">
+                {% if msg.sender.username == current_user_username %}You{% else %}{{ msg.sender.username }}{% endif %}
+            </span>
+            <span class="message-content block text-base text-gray-800">{{ msg.content }}</span>
+            <span class="message-timestamp block text-xs text-gray-500 mt-1">({{ msg.timestamp|date:"H:i" }})</span>
+        </div>
+    {% endfor %}
+</div>
+
+<div class="flex mt-4">
+    <input id="chat-message-input" type="text"
+        class="flex-grow px-4 py-2 border border-gray-300 rounded-l-full focus:outline-none focus:ring-2 focus:ring-green-500"
+        placeholder="Type your message...">
+    <button id="chat-message-submit"
+        class="px-6 py-2 bg-green-600 text-white rounded-r-full hover:bg-green-700 transition-colors duration-200">
+        Send
+    </button>
+</div>
+
+<p class="mt-4"><a href="{% url 'list_users_for_chat' %}" class="text-blue-600 hover:underline">Back to user list</a></p>
+
+{{ other_user_username|json_script:"other-username" }}
+{{ current_user_username|json_script:"current-username" }}
+
+<script>
+    const otherUsername = JSON.parse(document.getElementById('other-username').textContent);
+    const currentUserUsername = JSON.parse(document.getElementById('current-username').textContent);
+    const chatLog = document.getElementById('chat-log');
+    const messageInput = document.getElementById('chat-message-input');
+    const sendButton = document.getElementById('chat-message-submit');
+
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const chatSocket = new WebSocket(
+        wsProtocol + window.location.host +
+        '/ws/chat/' + otherUsername + '/'
+    );
+
+    chatSocket.onopen = function (e) {
+        console.log('Chat socket connected');
+    };
+
+    chatSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('chat-message', 'px-4', 'py-2', 'rounded-2xl', 'max-w-[70%]', 'break-words', 'shadow-md');
+
+        const senderNameSpan = document.createElement('span');
+        senderNameSpan.classList.add('sender-name', 'block', 'text-sm', 'font-semibold');
+
+        const messageContentSpan = document.createElement('span');
+        messageContentSpan.classList.add('message-content', 'block', 'text-base', 'text-gray-800');
+        messageContentSpan.textContent = data.message;
+
+        const timestampSpan = document.createElement('span');
+        timestampSpan.classList.add('message-timestamp', 'block', 'text-xs', 'text-gray-500', 'mt-1');
+        const now = new Date();
+        timestampSpan.textContent = `(${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')})`;
+
+        if (data.sender_username === currentUserUsername) {
+            messageDiv.classList.add('bg-green-100', 'self-end', 'text-right', 'ml-auto');
+            senderNameSpan.textContent = "You";
+            senderNameSpan.classList.add('text-green-700');
+        } else {
+            messageDiv.classList.add('bg-gray-100', 'self-start', 'text-left', 'mr-auto');
+            senderNameSpan.textContent = data.sender_username;
+            senderNameSpan.classList.add('text-gray-700');
+        }
+
+        messageDiv.appendChild(senderNameSpan);
+        messageDiv.appendChild(messageContentSpan);
+        messageDiv.appendChild(timestampSpan);
+        chatLog.appendChild(messageDiv);
+
+        chatLog.scrollTop = chatLog.scrollHeight;
+    };
+
+    chatSocket.onclose = function (e) {
+        const errorMsg = document.createElement('p');
+        errorMsg.classList.add('text-red-600', 'mt-2');
+        errorMsg.textContent = "Connection lost. Please refresh.";
+        chatLog.appendChild(errorMsg);
+        messageInput.disabled = true;
+        sendButton.disabled = true;
+    };
+
+    chatSocket.onerror = function (err) {
+        const errorMsg = document.createElement('p');
+        errorMsg.classList.add('text-red-600', 'mt-2');
+        errorMsg.textContent = "An error occurred with the chat connection.";
+        chatLog.appendChild(errorMsg);
+    };
+
+    messageInput.focus();
+    messageInput.onkeyup = function (e) {
+        if (e.key === 'Enter') {
+            sendButton.click();
+        }
+    };
+
+    sendButton.onclick = function () {
+        const message = messageInput.value;
+        if (message.trim() === '') return;
+        chatSocket.send(JSON.stringify({ 'message': message }));
+        messageInput.value = '';
+    };
+</script>
+{% endblock %}

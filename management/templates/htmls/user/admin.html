@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar { transition: transform 0.3s ease-in-out; }
+        .sidebar-hidden { transform: translateX(-100%); }
+        .timeline-item { position: relative; margin-left: 1.5rem; padding-left: 1.5rem; }
+        .timeline-item:before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px;
+            background-color: #3b82f6;
+        }
+        .timeline-dot {
+            position: absolute; left: -0.75rem; top: 0.5rem; width: 1rem; height: 1rem;
+            background-color: #3b82f6; border-radius: 50%;
+        }
+        .table-auto th, .table-auto td { padding: 0.5rem; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-indigo-600 text-white sidebar">
+        <div class="p-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+            <button id="toggleSidebar" class="md:hidden text-white focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                </svg>
+            </button>
+        </div>
+        <nav class="mt-6">
+            <ul>
+                <li class="mb-2"><a href="#overview" class="block p-2 hover:bg-indigo-700 rounded">Overview</a></li>
+                <li class="mb-2"><a href="#users" class="block p-2 hover:bg-indigo-700 rounded">Users</a></li>
+                <li class="mb-2"><a href="#projects" class="block p-2 hover:bg-indigo-700 rounded">Projects</a></li>
+                <li class="mb-2"><a href="#tasks" class="block p-2 hover:bg-indigo-700 rounded">Tasks</a></li>
+                <li class="mb-2"><a href="#transactions" class="block p-2 hover:bg-indigo-700 rounded">Transactions</a></li>
+                <li class="mb-2"><a href="#feedback" class="block p-2 hover:bg-indigo-700 rounded">Feedback</a></li>
+                <li class="mb-2"><a href="{% url 'logout' %}" class="block p-2 hover:bg-indigo-700 rounded">Logout</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ml-0 md:ml-64 p-6 transition-all duration-300" id="mainContent">
+        <button id="openSidebar" class="md:hidden bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600">Open Sidebar</button>
+        <h2 class="text-3xl font-semibold mb-6">Dashboard Overview</h2>
+
+        <!-- Error Message -->
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="bg-{{ message.tags }}-100 border-l-4 border-{{ message.tags }}-500 text-{{ message.tags }}-700 p-4" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Charts Section -->
+        <div id="overview" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-4">Project Status Distribution</h3>
+                <canvas id="projectStatusChart" height="150"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-4">Budget Usage</h3>
+                <canvas id="budgetUsageChart" height="150"></canvas>
+            </div>
+        </div>
+
+        <!-- Task Timeline -->
+        <div id="tasks" class="bg-white p-6 rounded-lg shadow mb-8">
+            <h3 class="text-xl font-semibold mb-4">Task Timeline</h3>
+            <div class="space-y-4">
+                {% for task in task_data %}
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex justify-between">
+                            <div>
+                                <h4 class="font-semibold">{{ task.title }}</h4>
+                                <p>Project: {{ task.project }}</p>
+                                <p>Due: {{ task.due_date }}</p>
+                                <p>Status: <span class="text-{% if task.status == 'Completed' %}green-600{% elif task.status == 'In Progress' %}yellow-600{% else %}red-600{% endif %}">{{ task.status }}</span></p>
+                                <p>Priority: {{ task.priority }}</p>
+                            </div>
+                            <div>
+                                <a href="{% url 'Task-Edit' task.id %}" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 mr-2">Edit</a>
+                                <a href="{% url 'Task-Delete' task.id %}" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500">No tasks available.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div id="users" class="bg-white p-6 rounded-lg shadow mb-8">
+            <h3 class="text-xl font-semibold mb-4">Users</h3>
+            <select id="userFilter" class="mb-4 p-2 border rounded" onchange="filterUsers()">
+                <option value="All">All Roles</option>
+                <option value="Government">Government</option>
+                <option value="Company_Head">Company Head</option>
+                <option value="Company_Employee">Company Employee</option>
+                <option value="Public">Public</option>
+            </select>
+            <table id="userTable" class="w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2 text-left">Username</th>
+                        <th class="p-2 text-left">Email</th>
+                        <th class="p-2 text-left">Role</th>
+                        <th class="p-2 text-left">Password Change</th>
+                        <th class="p-2 text-left">Added By</th>
+                        <th class="p-2 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in user_data %}
+                    <tr class="border-b" data-role="{{ user.role }}">
+                        <td class="p-2">{{ user.username }}</td>
+                        <td class="p-2">{{ user.email }}</td>
+                        <td class="p-2">{{ user.role }}</td>
+                        <td class="p-2">{{ user.must_change_password|yesno:"Yes,No" }}</td>
+                        <td class="p-2">{{ user.added_by|default:"N/A" }}</td>
+                        <td class="p-2">
+                            <a href="{% url 'change_password' %}" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 mr-2">Edit</a>
+
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="p-2 text-center text-gray-500">No users available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Projects Table -->
+        <div id="projects" class="bg-white p-6 rounded-lg shadow mb-8">
+            <h3 class="text-xl font-semibold mb-4">Projects</h3>
+            <table class="w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2 text-left">Title</th>
+                        <th class="p-2 text-left">Status</th>
+                        <th class="p-2 text-left">Budget</th>
+                        <th class="p-2 text-left">Remaining Budget</th>
+                        <th class="p-2 text-left">Team</th>
+                        <th class="p-2 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in project_data %}
+                    <tr class="border-b">
+                        <td class="p-2">{{ project.title }}</td>
+                        <td class="p-2">{{ project.status }}</td>
+                        <td class="p-2">${{ project.budget|floatformat:2 }}</td>
+                        <td class="p-2">${{ project.remaining_budget|floatformat:2 }}</td>
+                        <td class="p-2">{{ project.team|join:", " }}</td>
+                        <td class="p-2">
+                            <a href="{% url 'Project-View' project.id %}" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 mr-2">View</a>
+                            <a href="{% url 'Project-Edit' project.id %}" class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">Edit</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="p-2 text-center text-gray-500">No projects available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Transactions Table -->
+        <div id="transactions" class="bg-white p-6 rounded-lg shadow mb-8">
+            <h3 class="text-xl font-semibold mb-4">Transactions</h3>
+            <table class="w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2 text-left">Project</th>
+                        <th class="p-2 text-left">Amount</th>
+                        <th class="p-2 text-left">Type</th>
+                        <th class="p-2 text-left">Description</th>
+                        <!-- <th class="p-2 text-left">Date</th> -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transaction_summary %}
+                    <tr class="border-b">
+                        <td class="p-2">{{ transaction.project|default:"N/A" }}</td>
+                        <td class="p-2 {% if transaction.transaction_type == 'Debit' %}text-red-500{% else %}text-green-500{% endif %}">${{ transaction.total|floatformat:2 }}</td>
+                        <td class="p-2 {% if transaction.transaction_type == 'Debit' %}text-red-500{% else %}text-green-500{% endif %}">{{ transaction.transaction_type }}</td>
+                        <td class="p-2">{{ transaction.description|default:"N/A" }}</td>
+                        <!-- <td class="p-2">{{ transaction.date|date:"Y-m-d" }}</td> -->
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="p-2 text-center text-gray-500">No transactions available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Feedback Summary -->
+        <div id="feedback" class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-semibold mb-4">Feedback Summary</h3>
+            <table class="w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2 text-left">Type</th>
+                        <th class="p-2 text-left">Project</th>
+                        <th class="p-2 text-left">Rating</th>
+                        <th class="p-2 text-left">Feedback</th>
+                        <th class="p-2 text-left">User</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feedback in feedback_summary %}
+                    <tr class="border-b">
+                        <td className="p-2">{feedback.feedback_type|title}</td>
+                        <td className="p-2">{feedback.project|default:"N/A"}</td>
+                        <td className="p-2 {feedback.rating >= 4 ? 'text-green-500' : 'text-red-500'}">{feedback.rating|default:"N/A"}</td>
+                        <td className="p-2">{feedback.feedback_text}</td>
+                        <td className="p-2">{feedback.user|default:"Anonymous"}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="p-2 text-center text-gray-500">No feedback available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- JavaScript for Charts and Sidebar -->
+    <script>
+        // Sidebar Toggle
+        const toggleSidebar = document.getElementById('toggleSidebar');
+        const openSidebar = document.getElementById('openSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        toggleSidebar.addEventListener('click', () => {
+            sidebar.classList.toggle('sidebar-hidden');
+            mainContent.classList.toggle('md:ml-64');
+            mainContent.classList.toggle('ml-0');
+        });
+        openSidebar.addEventListener('click', () => {
+            sidebar.classList.remove('sidebar-hidden');
+            mainContent.classList.add('md:ml-64');
+            mainContent.classList.remove('ml-0');
+        });
+
+        // User Filter
+        function filterUsers() {
+            const filter = document.getElementById('userFilter').value;
+            const rows = document.querySelectorAll('#userTable tbody tr');
+            rows.forEach(row => {
+                const role = row.getAttribute('data-role');
+                row.style.display = filter === 'All' || role === filter ? '' : 'none';
+            });
+        }
+
+        // Pie Chart: Project Status
+        const statusCtx = document.getElementById('projectStatusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'pie',
+            data: {
+                labels: [{% for status in status_data %}'{{ status.status }}',{% endfor %}],
+                datasets: [{
+                    data: [{% for status in status_data %}{{ status.count }},{% endfor %}],
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Project Status Distribution' }
+                }
+            }
+        });
+
+        // Bar Chart: Budget Usage
+        const budgetCtx = document.getElementById('budgetUsageChart').getContext('2d');
+        new Chart(budgetCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for project in budget_data %}'{{ project.name }}',{% endfor %}],
+                datasets: [
+                    {
+                        label: 'Allocated Budget',
+                        data: [{% for project in budget_data %}{{ project.allocated }},{% endfor %}],
+                        backgroundColor: '#36A2EB',
+                        borderColor: '#2563eb',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Used Budget',
+                        data: [{% for project in budget_data %}{{ project.used }},{% endfor %}],
+                        backgroundColor: '#FF6384',
+                        borderColor: '#ff2d55',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Amount ($)' } },
+                    x: { title: { display: true, text: 'Projects' } }
+                },
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Budget Usage by Project' }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -2,7 +2,7 @@ from lib2to3.fixes.fix_input import context
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRedirect
 from django.template.context_processors import request
 from django.db import transaction
-from .models import CustomUser, Project, Task, Transaction
+from .models import CustomUser, Project, Task, Transaction, Feedback, ChatMessage
 from .forms import ProjectForm, TaskForm, TransactionForm, FeedbackForm, Signin_User, CompanyCreationForm, CompanyUserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from .utils import get_features, send_email
@@ -26,6 +26,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q # For complex queries
 
 import random
 import string
@@ -124,8 +125,14 @@ def login_view(request):
                 login(request, user)
                 return redirect('force_password_change') 
             else:
-                login(request, user)
-                return redirect('dashboard')  
+                if user.is_superuser or user.role == 'Government':
+                    login(request, user)
+                    return redirect('admin_view')
+                else:
+                    login(request, user)
+                    # Redirect to the dashboard or any other page
+                    messages.success(request, 'Login successful.')
+                    return redirect('dashboard')  
         else:
             messages.error(request, 'Invalid username or password.')
             return render(request, 'htmls/user/login.html')
@@ -135,6 +142,83 @@ def login_view(request):
 
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
+
+@login_required
+def admin_dashboard(request):
+    # Restrict access to Government role (adjust if System Admin is defined)
+    # Check if the user is a superuser and has the 'Government' role
+    if not request.user.is_superuser or request.user.role != 'Government':
+        return redirect('login') # Redirect to dashboard if not authorized
+    
+    # Project status data for pie chart
+    status_data = Project.objects.values('status').annotate(count=Count('id'))
+    
+    # Budget data for bar chart
+    projects = Project.objects.filter(status__in=['Ongoing', 'Planning'])
+    budget_data = [
+        {
+            'name': p.title,
+            'allocated': float(p.budget),
+            'used': float(Transaction.objects.filter(project=p).aggregate(Sum('amount'))['amount__sum'] or 0)
+        } for p in projects
+    ]
+    
+    # Task data for timeline (ordered by due date, limited to 10)
+    task = Task.objects.all().order_by('due_date')[:10]
+    task_data = [
+        {
+            'id': t.id,
+            'title': t.title,
+            'due_date': t.due_date.strftime('%Y-%m-%d'),
+            'status': t.status,
+            'priority': t.priority,
+            'project': t.project.title
+        } for t in task
+    ]
+    
+    # User data (limited to 10)
+    users = CustomUser.objects.all()[:10]
+    user_data = [
+        {
+            'username': u.username,
+            'email': u.email,
+            'role': u.role,
+            'must_change_password': u.must_change_password
+        } for u in users
+    ]
+    
+    # Project data (limited to 10)
+    project_data = [
+        {
+            'id': p.id,
+            'title': p.title,
+            'status': p.status,
+            'budget': float(p.budget),
+            'remaining_budget': float(p.get_remaining_budget()),
+            'team_members': [member.username for member in p.team_members.all()],
+            'start_date': p.start_date.strftime('%Y-%m-%d'),
+        } for p in Project.objects.all()[:10]
+    ]
+    
+    # Feedback summary
+    feedback_summary = Feedback.objects.all().values('rating').annotate(
+        count=Count('id')
+    ).order_by('rating')
+    
+    # Transaction summary (total credit/debit)
+    transaction_summary = Transaction.objects.values('transaction_type').annotate(total=Sum('amount'), count=Count('id'))
+    
+    context = {
+        'features': get_features(request.user.role),
+        'status_data': list(status_data),
+        'budget_data': budget_data,
+        'task_data': task_data,
+        'user_data': user_data,
+        'project_data': project_data,
+        'feedback_summary': list(feedback_summary),
+        'transaction_summary': list(transaction_summary)
+    }
+    return render(request, 'htmls/user/admin.html', context)
 
 
 def change_password(request):
@@ -226,6 +310,8 @@ def add_company(request):
             user.set_password(temp_password)
             user.force_password_change = True
             user.role = "Company_Head"
+            user.added_by = request.user  # Set the user who added this company
+            user.must_change_password = True  # Ensure the user must change password on first login
             user.save()
 
             subject = 'Your Company Account Login Credentials'
@@ -260,6 +346,8 @@ def add_company_user(request):
             user.set_password(temp_password)
             user.force_password_change = True
             user.role = "Company_Employee"
+            user.added_by = request.user  # Set the user who added this company
+            user.must_change_password = True  # Ensure the user must change password on first login
             user.save()
 
             subject = 'Your Company Account Login Credentials'
@@ -538,3 +626,63 @@ def about(request):
     number = Project.objects.filter(status='Completed').count()
     budget = Transaction.objects.filter(project__status='completed').aggregate(Sum('amount'))['amount__sum'] or 0    
     return render(request, 'htmls/feedback/about.html', {'number': number, 'budget': budget})
+
+
+
+
+CustomUser = get_user_model()
+
+@login_required
+def list_users_for_chat(request):
+    current_user = request.user
+    users_to_chat_with = []
+
+    # Define who current user can chat with based on their role
+    if current_user.role == 'Company_Head':
+        users_to_chat_with = CustomUser.objects.exclude(pk=current_user.pk).exclude(is_superuser=True).order_by('username')
+    elif current_user.role == 'Company_Employee':
+        users_to_chat_with = CustomUser.objects.filter(
+            Q(role='Company_Head') | Q(role='Company_Employee')
+        ).exclude(pk=current_user.pk).exclude(is_superuser=True).order_by('username')
+    elif current_user.role == 'Government':
+        users_to_chat_with = CustomUser.objects.filter(
+            Q(role='Company_Head') | Q(role='Public')
+        ).exclude(pk=current_user.pk).exclude(is_superuser=True).order_by('username')
+    elif current_user.role == 'Public':
+        users_to_chat_with = CustomUser.objects.filter(
+            role='Government'
+        ).exclude(pk=current_user.pk).exclude(is_superuser=True).order_by('username')
+    
+    # Your additional logic to first choose role, then list users:
+    # This view would likely be more complex, perhaps taking a 'role_filter' query param.
+    # For simplicity, this lists all permissible users directly.
+
+    context = {
+        'users_to_chat_with': users_to_chat_with,
+        'current_user_role': current_user.role
+    }
+    return render(request, 'htmls/chats/list_users.html', context)
+
+@login_required
+def chat_room(request, other_username):
+    other_user = get_object_or_404(CustomUser, username=other_username)
+    current_user = request.user
+
+    # You might want to re-check can_chat_with logic here for HTTP access,
+    # though the WebSocket connect will be the ultimate guard.
+    # For example, can_chat_with_http(current_user, other_user)
+    # if not can_chat_with_http(current_user, other_user):
+    #     return redirect('some_error_page_or_list_users')
+
+    # (Optional) Load previous messages
+    previous_messages = ChatMessage.objects.filter(
+        (Q(sender=current_user) & Q(receiver=other_user)) |
+        (Q(sender=other_user) & Q(receiver=current_user))
+    ).order_by('timestamp')
+
+    context = {
+        'other_user_username': other_user.username,
+        'current_user_username': current_user.username,
+        'previous_messages': previous_messages,
+    }
+    return render(request, 'htmls/chats/chat_room.html', context)

@@ -33,6 +33,7 @@ AUTH_USER_MODEL = 'management.CustomUser'
 # Application definition
 
 INSTALLED_APPS = [
+   'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,7 +45,11 @@ INSTALLED_APPS = [
    'management',
    'tailwind',
    'theme',
+   'tinymce',
    'widget_tweaks',
+   'channels',
+
+   
 
 ]
 
@@ -87,6 +92,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
+ASGI_APPLICATION = 'core.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -120,6 +126,22 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Channel Layers Configuration (In-memory for localhost development)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": [("127.0.0.1", 6379)],
+#         },
+#     },
+# }
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -151,7 +173,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # For development, use console backend to print emails to console
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP provider
 EMAIL_PORT = 587

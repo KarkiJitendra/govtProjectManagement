@@ -7,6 +7,7 @@ from django.core.validators import EmailValidator, RegexValidator
 from django.utils import timezone
 from management import validators
 from django.core.exceptions import ValidationError
+from tinymce.widgets import TinyMCE
 
 
 class BaseForm(forms.Form):
@@ -112,7 +113,7 @@ class ProjectForm(forms.ModelForm):
         exclude = ['start_date', 'project']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400'}),
-            'description': forms.Textarea(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400'}),
+            'description': TinyMCE(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400', 'rows': 4}),
             'status': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400'}),
             'end_date': forms.DateInput(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400', 'type': 'date'}),
             'owner': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-blue-300 rounded-md bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400'}),

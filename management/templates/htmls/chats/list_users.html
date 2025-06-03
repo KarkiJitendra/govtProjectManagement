@@ -1,0 +1,27 @@
+
+{% extends "htmls/project/main.html" %} <!-- Assuming you have a base template -->
+
+
+{% block title %}Start Chat{% endblock %}
+
+{% block content %}
+<h2>Users you can chat with (Your Role: {{ current_user_role }})</h2>
+{% if users_to_chat_with %}
+    <ul>
+        {% for user_chat in users_to_chat_with %}
+            <li>
+                {{ user_chat.username }} ({{ user_chat.get_role_display }})
+                {% if user_chat.unread_count > 0 %}
+                    <strong style="color: red;">({{ user_chat.unread_count }} new)</strong>
+                {% endif %}
+                - <a href="{% url 'chat_room' other_username=user_chat.username %}">Chat</a>
+            </li>
+        {% empty %}
+            <li>No users available to chat with based on your role and current users.</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No users available for you to chat with, or your role does not permit chatting.</p>
+{% endif %}
+<p><a href="/">Go Home</a></p>
+{% endblock %}
