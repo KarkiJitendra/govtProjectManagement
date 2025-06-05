@@ -14,7 +14,7 @@
     <div class="flex justify-between items-center max-w-7xl mx-auto px-6 py-3">
       <!-- Logo -->
       <div class="w-24 h-16">
-        <img src="{% static 'images/newlopoy.png' %}" class="w-full h-full object-cover rounded-lg shadow" alt="Logo" />
+       <a href="{% url 'dashboard' %}"><img src="{% static 'images/newlopoy.png' %}" class="w-full h-full object-cover rounded-lg shadow" alt="Logo" /></a>
       </div>
 
       <!-- Title -->
@@ -27,7 +27,7 @@
         <li><a href="{% url 'dashboard' %}" class="px-4 py-2 hover:bg-indigo-600 hover:text-white rounded transition">Home</a></li>
         <li><a href="{% url 'ProjectList' %}" class="px-4 py-2 hover:bg-indigo-600 hover:text-white rounded transition">Projects</a></li>
         <li><a href="{% url 'about' %}" class="px-4 py-2 hover:bg-indigo-600 hover:text-white rounded transition">About</a></li>
-        <li><a href="{% url 'thank-you' %}" class="px-4 py-2 hover:bg-indigo-600 hover:text-white rounded transition">Contact</a></li>
+        <li><a href="{% url 'contactpage' %}" class="px-4 py-2 hover:bg-indigo-600 hover:text-white rounded transition">Contact</a></li>
       </ul>
 
       <!-- User and Logout -->

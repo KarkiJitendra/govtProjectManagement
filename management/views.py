@@ -11,7 +11,7 @@ from django.core.validators import EmailValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
@@ -278,6 +278,11 @@ from django.db.models import Count, Sum
 
 @login_required
 def chart_view(request):
+    
+    total_unread_dashboard_count = ChatMessage.objects.filter(
+    receiver=request.user,
+    is_read=False
+    ).count()
     status_data = Project.objects.values('status').annotate(count=Count('id'))
 
     projects = Project.objects.filter(status__in=['Ongoing', 'Planning'])    
@@ -291,7 +296,9 @@ def chart_view(request):
 
     context = {
         'status_data': list(status_data),
-        'budget_data': bar_data
+        'budget_data': bar_data,
+        'total_unread_dashboard_count': total_unread_dashboard_count,
+        'message': request.GET.get('message', None)
     }
     return render(request, 'htmls/user/dashboard.html', context)
 
@@ -605,8 +612,12 @@ def deletetransaction(request,id):
     return HttpResponseRedirect(f'/projects/{project_id}/transactions/')
 
 #################--FeedbackViews---############
+@login_required
+def contact(request):
+    return render(request, 'htmls/feedback/contact.html')
 
 
+@login_required
 def submit_feedback(request):
     if request.method == 'POST':
         form = FeedbackForm(request.POST)
@@ -619,9 +630,10 @@ def submit_feedback(request):
     else:
         form = FeedbackForm()
 
-    return render(request, 'htmls/feedback/contact.html', {'form': form})
+    return render(request, 'htmls/feedback/sendmail.html', {'form': form})
     
     
+@login_required    
 def about(request):
     number = Project.objects.filter(status='Completed').count()
     budget = Transaction.objects.filter(project__status='completed').aggregate(Sum('amount'))['amount__sum'] or 0    
@@ -632,57 +644,118 @@ def about(request):
 
 CustomUser = get_user_model()
 
+
+from django.db.models import Count, Subquery, OuterRef, Value
+from django.db.models.functions import Coalesce
+
+CustomUser = get_user_model()
+
 @login_required
 def list_users_for_chat(request):
     current_user = request.user
-    users_to_chat_with = []
-
-    # Define who current user can chat with based on their role
-    if current_user.role == 'Company_Head':
-        users_to_chat_with = CustomUser.objects.exclude(pk=current_user.pk).exclude(is_superuser=True).order_by('username')
-    elif current_user.role == 'Company_Employee':
-        users_to_chat_with = CustomUser.objects.filter(
-            Q(role='Company_Head') | Q(role='Company_Employee')
-        ).exclude(pk=current_user.pk).exclude(is_superuser=True).order_by('username')
-    elif current_user.role == 'Government':
-        users_to_chat_with = CustomUser.objects.filter(
-            Q(role='Company_Head') | Q(role='Public')
-        ).exclude(pk=current_user.pk).exclude(is_superuser=True).order_by('username')
-    elif current_user.role == 'Public':
-        users_to_chat_with = CustomUser.objects.filter(
-            role='Government'
-        ).exclude(pk=current_user.pk).exclude(is_superuser=True).order_by('username')
     
-    # Your additional logic to first choose role, then list users:
-    # This view would likely be more complex, perhaps taking a 'role_filter' query param.
-    # For simplicity, this lists all permissible users directly.
+    # Determine users the current_user can chat with based on roles
+    # This logic should mirror your can_chat_with logic in the consumer
+    eligible_roles_map = {
+        'Company_Head': ['Company_Head', 'Company_Employee', 'Government', 'Public'], # Can chat with anyone
+        'Company_Employee': ['Company_Head', 'Company_Employee'],
+        'Government': ['Company_Head', 'Public', 'Government'], # Assuming Gov can chat with other Gov
+        'Public': ['Government']
+    }
+    # Adjust the map above according to your exact business rules.
+    # For 'Company_Head', if it's truly anyone, you might not need to filter by role, just exclude self.
+    
+    allowed_roles_for_chat = eligible_roles_map.get(current_user.role, [])
+    
+    if current_user.role == 'Company_Head': # Special case if they can chat with literally anyone
+        users_to_chat_with_qs = CustomUser.objects.exclude(id=current_user.id)
+    else:
+        users_to_chat_with_qs = CustomUser.objects.filter(role__in=allowed_roles_for_chat).exclude(id=current_user.id)
+    
+    # Annotate with unread message count from each user in the queryset
+    # Unread messages are sent by 'other_user' (sender=OuterRef('pk')) to 'current_user' (receiver=current_user)
+    unread_subquery = ChatMessage.objects.filter(
+        sender=OuterRef('pk'),
+        receiver=current_user,
+        is_read=False
+    ).values('sender').annotate(count=Count('id')).values('count')
+
+    users_annotated = users_to_chat_with_qs.annotate(
+        unread_count=Coalesce(Subquery(unread_subquery[:1]), Value(0))
+    ).order_by('-unread_count', 'username') # Show users with unread messages first
 
     context = {
-        'users_to_chat_with': users_to_chat_with,
-        'current_user_role': current_user.role
+        'users_to_chat_with': users_annotated,
+        'current_user_role': current_user.get_role_display(),
+        'current_user': current_user, # Pass current_user for JS if needed
     }
-    return render(request, 'htmls/chats/list_users.html', context)
+    return render(request, 'htmls/chats/list_users.html', context) # Ensure template path is correct
+
+
+
+def _can_chat_with(user1, user2):
+    """
+    Helper function to determine if two users can chat.
+    This should mirror the logic in your ChatConsumer.
+    Consider moving this to a utils.py or a model method for DRYness.
+    """
+    if not user1 or not user2:
+        return False
+    if user1 == user2: # Cannot chat with oneself
+        return False
+
+    role1 = user1.role
+    role2 = user2.role
+    
+    # Define chat permissions (adjust as per your exact rules)
+    # Format: current_user_role: [list_of_roles_they_can_chat_with]
+    permissions = {
+        'Company_Head': ['Company_Head', 'Company_Employee', 'Government', 'Public'],
+        'Company_Employee': ['Company_Head', 'Company_Employee'],
+        'Government': ['Company_Head', 'Public', 'Government'], # Assuming Gov can chat with other Gov
+        'Public': ['Government','Company_Head']
+    }
+    
+    if role1 in permissions:
+        return role2 in permissions[role1]
+    return False
+
 
 @login_required
 def chat_room(request, other_username):
-    other_user = get_object_or_404(CustomUser, username=other_username)
     current_user = request.user
+    try:
+        other_user = CustomUser.objects.get(username=other_username)
+    except CustomUser.DoesNotExist:
+        # Handle user not found, e.g., redirect to a list or show an error
+        return redirect('list_users_for_chat') # Or some other appropriate page
 
-    # You might want to re-check can_chat_with logic here for HTTP access,
-    # though the WebSocket connect will be the ultimate guard.
-    # For example, can_chat_with_http(current_user, other_user)
-    # if not can_chat_with_http(current_user, other_user):
-    #     return redirect('some_error_page_or_list_users')
+    if current_user == other_user:
+        # User trying to chat with themselves, redirect or show message
+        return redirect('list_users_for_chat') # Or some other appropriate page
 
-    # (Optional) Load previous messages
-    previous_messages = ChatMessage.objects.filter(
+    # Check if these users are allowed to chat
+    if not _can_chat_with(current_user, other_user):
+        # You can redirect or show a specific "permission denied" page
+        return HttpResponseForbidden("You are not allowed to chat with this user.")
+
+    # Fetch previous messages between the two users
+    # Messages where current_user is sender and other_user is receiver OR
+    # Messages where other_user is sender and current_user is receiver
+    chat_messages = ChatMessage.objects.filter(
         (Q(sender=current_user) & Q(receiver=other_user)) |
         (Q(sender=other_user) & Q(receiver=current_user))
-    ).order_by('timestamp')
+    ).order_by('timestamp') # Order by timestamp to show in chronological order
+
+    # Note: The ChatConsumer's connect method already handles marking messages
+    # from other_user to current_user as read when the WebSocket connects.
+    # So, we don't strictly need to do it here again. The consumer ensures
+    # that when the user actively enters the chat (WS connects), messages are marked.
 
     context = {
-        'other_user_username': other_user.username,
-        'current_user_username': current_user.username,
-        'previous_messages': previous_messages,
+        'other_user': other_user,
+        'other_username_json': other_username, # For JS WebSocket URL
+        'chat_messages': chat_messages,
+        'current_user': current_user,
     }
     return render(request, 'htmls/chats/chat_room.html', context)

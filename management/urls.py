@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import login_view, signin_view, dashboard_view, createproject, projectlist, projectedit, projectdelete, \
     projectview, create_task, tasklist, taskview, taskedit, taskdelete, viewtask, transaction_list, createtransaction,\
-    edittransaction, deletetransaction, listtransaction, submit_feedback, add_company, logout_view, change_password, projectTransaction, about, chart_view, add_company_user, projectask, admin_dashboard, chat_room, list_users_for_chat
+    edittransaction, deletetransaction, listtransaction, submit_feedback, contact, add_company, logout_view, change_password, projectTransaction, about, chart_view, add_company_user, projectask, admin_dashboard, list_users_for_chat, chat_room
 
 urlpatterns = [
     path('login/', login_view, name='login'),
@@ -41,11 +41,13 @@ urlpatterns = [
     path('transactions/delete/<int:id>/', deletetransaction, name='delete_transaction'),
     
     
-    path('feedback/', submit_feedback, name='thank-you'),
+    path('contact/feedback/', submit_feedback, name='thank-you'),
+    path('contact/', contact, name='contactpage'),
     path('about/', about, name='about'),
     
     path('chat/users/', list_users_for_chat, name='list_users_for_chat'),
     path('chat/with/<str:other_username>/', chat_room, name='chat_room'),
+    
     
     
     

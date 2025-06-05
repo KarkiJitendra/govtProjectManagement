@@ -1,121 +1,143 @@
+<!-- management/templates/management/chat_room.html -->
 {% extends "htmls/project/main.html" %}
+{% load static %}
 
-{% block title %}Chat with {{ other_user_username }}{% endblock %}
+{% block title %}Chat with {{ other_user.username }}{% endblock %}
 
 {% block content %}
-<h2 class="text-xl font-semibold text-gray-800 mb-4">Chat with {{ other_user_username }}</h2>
+<div class="min-h-screen py-8 px-4 sm:px-12 bg-gray-50">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-3xl shadow-xl p-6">
+            <h2 class="text-xl font-bold text-blue-800 mb-4 text-center">
+                Chatting with: {{ other_user.username }} ({{ other_user.get_role_display }})
+            </h2>
 
-<div id="chat-log" class="h-[400px] w-full border border-gray-300 overflow-y-scroll p-4 mb-4 flex flex-col space-y-2 rounded-lg bg-white shadow-inner">
-    {% for msg in previous_messages %}
-        <div class="chat-message {% if msg.sender.username == current_user_username %}own-message{% else %}other-message{% endif %} px-4 py-2 rounded-2xl max-w-[70%] break-words shadow-md 
-            {% if msg.sender.username == current_user_username %}bg-green-100 self-end text-right ml-auto{% else %}bg-gray-100 self-start text-left mr-auto{% endif %}">
-            <span class="sender-name block text-sm font-semibold 
-                {% if msg.sender.username == current_user_username %}text-green-700{% else %}text-gray-700{% endif %}">
-                {% if msg.sender.username == current_user_username %}You{% else %}{{ msg.sender.username }}{% endif %}
-            </span>
-            <span class="message-content block text-base text-gray-800">{{ msg.content }}</span>
-            <span class="message-timestamp block text-xs text-gray-500 mt-1">({{ msg.timestamp|date:"H:i" }})</span>
+            <div id="chat-log" class="h-96 overflow-y-auto border border-gray-300 rounded-lg p-4 mb-4 bg-gray-100 space-y-2">
+                {% for message in chat_messages %}
+                    <div class="message-item {% if message.sender == current_user %}text-right{% else %}text-left{% endif %}">
+                        <div class="inline-block p-3 rounded-xl max-w-xs lg:max-w-md
+                            {% if message.sender == current_user %}bg-blue-500 text-white{% else %}bg-gray-300 text-gray-800{% endif %}">
+                            <p class="text-sm">{{ message.content }}</p>
+                            <p class="text-xs {% if message.sender == current_user %}text-blue-200{% else %}text-gray-500{% endif %} mt-1">
+                                {% if message.sender == current_user %}You{% else %}{{ message.sender.username }}{% endif %} - <small>{{ message.timestamp|date:"M d, P" }}</small>
+                            </p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-gray-500 text-center">No messages yet. Start the conversation!</p>
+                {% endfor %}
+            </div>
+
+            <div class="mt-4">
+                <textarea id="chat-message-input" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" rows="3" placeholder="Type your message..."></textarea>
+                <button id="chat-message-submit" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+                    Send
+                </button>
+            </div>
+
+            <div class="mt-6 text-center">
+                <a href="{% url 'list_users_for_chat' %}" class="text-blue-600 hover:underline">← Back to User List</a>
+            </div>
         </div>
-    {% endfor %}
+    </div>
 </div>
-
-<div class="flex mt-4">
-    <input id="chat-message-input" type="text"
-        class="flex-grow px-4 py-2 border border-gray-300 rounded-l-full focus:outline-none focus:ring-2 focus:ring-green-500"
-        placeholder="Type your message...">
-    <button id="chat-message-submit"
-        class="px-6 py-2 bg-green-600 text-white rounded-r-full hover:bg-green-700 transition-colors duration-200">
-        Send
-    </button>
-</div>
-
-<p class="mt-4"><a href="{% url 'list_users_for_chat' %}" class="text-blue-600 hover:underline">Back to user list</a></p>
-
-{{ other_user_username|json_script:"other-username" }}
-{{ current_user_username|json_script:"current-username" }}
 
 <script>
-    const otherUsername = JSON.parse(document.getElementById('other-username').textContent);
-    const currentUserUsername = JSON.parse(document.getElementById('current-username').textContent);
+    const otherUsername = "{{ other_username_json }}"; // From Django context
+    const currentUsername = "{{ current_user.username }}"; // From Django context
     const chatLog = document.getElementById('chat-log');
     const messageInput = document.getElementById('chat-message-input');
-    const sendButton = document.getElementById('chat-message-submit');
+    const messageSubmit = document.getElementById('chat-message-submit');
 
-    chatLog.scrollTop = chatLog.scrollHeight;
+    const chatSocketProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const chatSocketURL = chatSocketProtocol + '//' + window.location.host + '/ws/chat/' + otherUsername + '/';
+    
+    let chatSocket;
 
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-    const chatSocket = new WebSocket(
-        wsProtocol + window.location.host +
-        '/ws/chat/' + otherUsername + '/'
-    );
+    function connectChatSocket() {
+        chatSocket = new WebSocket(chatSocketURL);
 
-    chatSocket.onopen = function (e) {
-        console.log('Chat socket connected');
+        chatSocket.onopen = function(e) {
+            console.log('Chat WebSocket connection established with ' + otherUsername);
+            messageInput.focus();
+        };
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log("Message received:", data);
+            appendMessageToLog(data.message, data.sender_username, false);
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat WebSocket connection closed unexpectedly. Attempting to reconnect...');
+            // You might want to add a delay or max attempts for reconnection
+            setTimeout(connectChatSocket, 3000); // Reconnect after 3 seconds
+        };
+
+        chatSocket.onerror = function(e) {
+            console.error('Chat WebSocket error:', e);
+        };
+    }
+
+    connectChatSocket(); // Initial connection attempt
+
+    messageSubmit.onclick = function(e) {
+        sendMessage();
     };
 
-    chatSocket.onmessage = function (e) {
-        const data = JSON.parse(e.data);
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('chat-message', 'px-4', 'py-2', 'rounded-2xl', 'max-w-[70%]', 'break-words', 'shadow-md');
+    messageInput.onkeyup = function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { // Send on Enter, new line on Shift+Enter
+            e.preventDefault(); // Prevent default Enter behavior (new line in textarea)
+            sendMessage();
+        }
+    };
 
-        const senderNameSpan = document.createElement('span');
-        senderNameSpan.classList.add('sender-name', 'block', 'text-sm', 'font-semibold');
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        if (message === '') {
+            return;
+        }
+        chatSocket.send(JSON.stringify({
+            'message': message
+        }));
+        appendMessageToLog(message, currentUsername, true); // Optimistically add to log
+        messageInput.value = ''; // Clear input
+        messageInput.focus();
+    }
 
-        const messageContentSpan = document.createElement('span');
-        messageContentSpan.classList.add('message-content', 'block', 'text-base', 'text-gray-800');
-        messageContentSpan.textContent = data.message;
+    function appendMessageToLog(messageContent, sender, isCurrentUser) {
+        const messageItemDiv = document.createElement('div');
+        messageItemDiv.classList.add('message-item');
+        messageItemDiv.classList.add(isCurrentUser ? 'text-right' : 'text-left');
 
-        const timestampSpan = document.createElement('span');
-        timestampSpan.classList.add('message-timestamp', 'block', 'text-xs', 'text-gray-500', 'mt-1');
+        const messageBubbleDiv = document.createElement('div');
+        messageBubbleDiv.classList.add('inline-block', 'p-3', 'rounded-xl', 'max-w-xs', 'lg:max-w-md');
+        messageBubbleDiv.classList.add(isCurrentUser ? 'bg-blue-500' : 'bg-gray-300');
+        messageBubbleDiv.classList.add(isCurrentUser ? 'text-white' : 'text-gray-800');
+        
+        const messageP = document.createElement('p');
+        messageP.classList.add('text-sm');
+        messageP.textContent = messageContent;
+        messageBubbleDiv.appendChild(messageP);
+
+        const senderInfoP = document.createElement('p');
+        senderInfoP.classList.add('text-xs', 'mt-1');
+        senderInfoP.classList.add(isCurrentUser ? 'text-blue-200' : 'text-gray-500');
         const now = new Date();
-        timestampSpan.textContent = `(${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')})`;
+        // Simple time formatting, you might want a more robust library or Django's `timesince` for older messages
+        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); 
+        senderInfoP.innerHTML = `${isCurrentUser ? 'You' : sender} - <small>${timeString}</small>`;
+        messageBubbleDiv.appendChild(senderInfoP);
 
-        if (data.sender_username === currentUserUsername) {
-            messageDiv.classList.add('bg-green-100', 'self-end', 'text-right', 'ml-auto');
-            senderNameSpan.textContent = "You";
-            senderNameSpan.classList.add('text-green-700');
-        } else {
-            messageDiv.classList.add('bg-gray-100', 'self-start', 'text-left', 'mr-auto');
-            senderNameSpan.textContent = data.sender_username;
-            senderNameSpan.classList.add('text-gray-700');
-        }
+        messageItemDiv.appendChild(messageBubbleDiv);
+        chatLog.appendChild(messageItemDiv);
+        chatLog.scrollTop = chatLog.scrollHeight; // Scroll to bottom
+    }
 
-        messageDiv.appendChild(senderNameSpan);
-        messageDiv.appendChild(messageContentSpan);
-        messageDiv.appendChild(timestampSpan);
-        chatLog.appendChild(messageDiv);
-
+    // Scroll to the bottom of the chat log on initial load
+    window.addEventListener('load', (event) => {
         chatLog.scrollTop = chatLog.scrollHeight;
-    };
+    });
 
-    chatSocket.onclose = function (e) {
-        const errorMsg = document.createElement('p');
-        errorMsg.classList.add('text-red-600', 'mt-2');
-        errorMsg.textContent = "Connection lost. Please refresh.";
-        chatLog.appendChild(errorMsg);
-        messageInput.disabled = true;
-        sendButton.disabled = true;
-    };
-
-    chatSocket.onerror = function (err) {
-        const errorMsg = document.createElement('p');
-        errorMsg.classList.add('text-red-600', 'mt-2');
-        errorMsg.textContent = "An error occurred with the chat connection.";
-        chatLog.appendChild(errorMsg);
-    };
-
-    messageInput.focus();
-    messageInput.onkeyup = function (e) {
-        if (e.key === 'Enter') {
-            sendButton.click();
-        }
-    };
-
-    sendButton.onclick = function () {
-        const message = messageInput.value;
-        if (message.trim() === '') return;
-        chatSocket.send(JSON.stringify({ 'message': message }));
-        messageInput.value = '';
-    };
 </script>
 {% endblock %}

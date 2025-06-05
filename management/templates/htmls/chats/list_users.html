@@ -1,27 +1,55 @@
-
-{% extends "htmls/project/main.html" %} <!-- Assuming you have a base template -->
-
+{% extends "htmls/project/main.html" %}
+{% load static %}
 
 {% block title %}Start Chat{% endblock %}
 
 {% block content %}
-<h2>Users you can chat with (Your Role: {{ current_user_role }})</h2>
-{% if users_to_chat_with %}
-    <ul>
-        {% for user_chat in users_to_chat_with %}
-            <li>
-                {{ user_chat.username }} ({{ user_chat.get_role_display }})
-                {% if user_chat.unread_count > 0 %}
-                    <strong style="color: red;">({{ user_chat.unread_count }} new)</strong>
-                {% endif %}
-                - <a href="{% url 'chat_room' other_username=user_chat.username %}">Chat</a>
-            </li>
-        {% empty %}
-            <li>No users available to chat with based on your role and current users.</li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No users available for you to chat with, or your role does not permit chatting.</p>
-{% endif %}
-<p><a href="/">Go Home</a></p>
+<div class="min-h-screen py-8 px-4 sm:px-12 bg-gray-50">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-3xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-blue-800 mb-6 text-center">
+                👥 Users You Can Chat With<br>
+                <span class="text-sm text-gray-600">(Your Role: {{ current_user_role }})</span>
+            </h2>
+
+            {% if users_to_chat_with %}
+                <ul class="divide-y divide-gray-200">
+                    {% for user_chat in users_to_chat_with %}
+                        <li class="py-4 flex items-center justify-between user-chat-item" data-username="{{ user_chat.username }}"> {# MODIFIED #}
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold">
+                                    {{ user_chat.username|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <p class="text-lg font-semibold text-gray-800">{{ user_chat.username }}</p>
+                                    <p class="text-sm text-gray-500">{{ user_chat.get_role_display }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="unread-count-badge {# MODIFIED #}
+                                    inline-flex items-center justify-center px-3 py-1 text-xs font-semibold 
+                                    leading-none text-red-100 bg-red-600 rounded-full"
+                                    style="{% if user_chat.unread_count > 0 %}display: inline-flex;{% else %}display: none;{% endif %}">
+                                    🔔 {% if user_chat.unread_count > 0 %}{{ user_chat.unread_count }}{% else %}0{% endif %} New {# Default to 0 if not >0 for JS #}
+                                </span>
+                                <a href="{% url 'chat_room' other_username=user_chat.username %}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow transition">
+                                    💬 Chat
+                                </a>
+                            </div>
+                        </li>
+                    {% empty %}
+                        <li class="text-red-500 text-center py-4">No users available to chat with based on your role and current users.</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-center text-gray-600">No users available for you to chat with, or your role does not permit chatting.</p>
+            {% endif %}
+
+            <div class="mt-6 text-center">
+                <a href="/" class="text-blue-600 hover:underline">← Go Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/notifications.js' %}"></script> {# ADD SCRIPT HERE #}
 {% endblock %}
