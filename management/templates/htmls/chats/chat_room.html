@@ -65,6 +65,15 @@
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             console.log("Message received:", data);
+            if (data.sender_username === currentUsername) {
+                console.log("Received own message broadcast. Already displayed optimistically. Ignoring.");
+                // Optional: You could use this point to update the status of the optimistically
+                // added message, e.g., change a "sending..." icon to a "sent" checkmark,
+                // or update its ID if you use temporary client-side IDs.
+                // For now, just returning is enough to prevent duplication.
+                return;
+            }
+
             appendMessageToLog(data.message, data.sender_username, false);
         };
 

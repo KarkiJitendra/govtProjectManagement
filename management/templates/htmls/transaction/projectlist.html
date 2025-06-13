@@ -32,7 +32,6 @@
                             {% if  user == project.owner %}
                             <td class="px-4 py-3 space-x-2">
                                 <a href="{% url 'edit_transaction' transaction.id %}" class="inline-block bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm">Edit</a>
-                                <a href="{% url 'delete_transaction' transaction.id %}" class="inline-block bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700 text-sm">Delete</a>
                             </td>
                             {% endif %}
                         </tr>
